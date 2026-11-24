@@ -9,7 +9,7 @@
     seasonId: null,
     fantasySort: { key: 'total', dir: -1 }, fantasyPos: 'alle',
     playersView: 'kaarten', playersSort: { key: 'goals', dir: -1 },
-    matchFilter: 'alle', cardsOnly: 'ja', cardsSort: { key: 'yellow', dir: -1 }, cardsStatus: 'alle',
+    matchFilter: 'alle', matchSort: { key: 'minutes', dir: -1 }, cardsOnly: 'ja', cardsSort: { key: 'yellow', dir: -1 }, cardsStatus: 'alle',
     compareMode: 'n', compareN: null
   };
 
@@ -365,9 +365,27 @@
       var own = pl.filter(function (x) { return x.l.own_goals || x.l.pen_missed || x.l.pen_saved || x.l.suspended; });
       html += '<div><h2>Teamcijfers</h2>' + teamPairs(m) + '</div></div></div>';
 
-      html += '<div class="sec"><h2>Opstelling en punten</h2><div class="table-wrap" style="margin-top:12px"><table class="t"><thead><tr><th class="l sticky">Speler</th><th>Pos.</th><th>Min.</th><th>Goals</th><th>Assists</th><th>Geel</th><th>Rood</th><th>MvdM</th><th>Punten</th></tr></thead><tbody>';
-      pl.sort(function (a, b) { return (E.num(b.l.minutes) - E.num(a.l.minutes)) || a.row.name.localeCompare(b.row.name, 'nl'); }).forEach(function (x) {
-        var p = E.linePoints(x.l, m, x.row.roster.position, S.rules);
+      var ms = ui.matchSort, mp = {};
+      pl.forEach(function (x) { mp[x.row.roster.id] = E.linePoints(x.l, m, x.row.roster.position, S.rules).total; });
+      var mget = {
+        name: function (x) { return x.row.name; },
+        pos: function (x) { return E.POSITIONS.indexOf(x.row.roster.position) + 1 || 9; },
+        minutes: function (x) { return x.l.minutes == null ? -1 : E.num(x.l.minutes); },
+        goals: function (x) { return E.lineGoals(x.l); }, assists: function (x) { return E.num(x.l.assists); },
+        yellow: function (x) { return E.num(x.l.yellow); }, red: function (x) { return E.num(x.l.red); },
+        motm: function (x) { return x.l.motm ? 4 - x.l.motm : 0; },
+        points: function (x) { return mp[x.row.roster.id]; }
+      };
+      var mg = mget[ms.key] || mget.minutes;
+      html += '<div class="sec"><h2>Opstelling en punten</h2><p class="muted" style="margin-top:4px">Klik op een kolomtitel om te sorteren.</p><div class="table-wrap" style="margin-top:12px"><table class="t"><thead><tr>' +
+        th('Speler', 'name', ms, 'match', { cls: 'l sticky' }) + th('Pos.', 'pos', ms, 'match') + th('Min.', 'minutes', ms, 'match') + th('Goals', 'goals', ms, 'match') +
+        th('Assists', 'assists', ms, 'match') + th('Geel', 'yellow', ms, 'match') + th('Rood', 'red', ms, 'match') + th('MvdM', 'motm', ms, 'match', { title: 'Man van de match (1e, 2e of 3e plaats)' }) +
+        th('Punten', 'points', ms, 'match') + '</tr></thead><tbody>';
+      pl.sort(function (a, b) {
+        var d = (mg(a) - mg(b)) * ms.dir; if (typeof mg(a) === 'string') d = String(mg(a)).localeCompare(String(mg(b)), 'nl') * ms.dir;
+        return d || (E.num(b.l.minutes) - E.num(a.l.minutes)) || a.row.name.localeCompare(b.row.name, 'nl');
+      }).forEach(function (x) {
+        var p = { total: mp[x.row.roster.id] };
         html += '<tr><td class="l sticky"><a href="' + personHref(x.row) + '">' + esc(x.row.name) + '</a></td><td>' + U.posBadge(x.row.roster.position) + '</td><td class="num">' + (x.l.minutes === 0 ? 'bank' : x.l.minutes == null ? '<span class="zero">-</span>' : x.l.minutes) + '</td>' +
           '<td class="num">' + U.dash(E.lineGoals(x.l)) + '</td><td class="num">' + U.dash(E.num(x.l.assists)) + '</td><td class="num">' + U.dash(E.num(x.l.yellow)) + '</td><td class="num">' + U.dash(E.num(x.l.red)) + '</td><td class="num">' + (x.l.motm || '<span class="zero">-</span>') + '</td><td class="num total">' + p.total + '</td></tr>';
       });

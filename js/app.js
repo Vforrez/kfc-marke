@@ -141,7 +141,7 @@
     var t = e.target;
     var s = t.closest('[data-act="sort"]');
     if (s) {
-      var tb = s.getAttribute('data-table'), st = tb === 'fantasy' ? ui.fantasySort : tb === 'cards' ? ui.cardsSort : ui.playersSort, k = s.getAttribute('data-key');
+      var tb = s.getAttribute('data-table'), st = tb === 'fantasy' ? ui.fantasySort : tb === 'cards' ? ui.cardsSort : tb === 'match' ? ui.matchSort : ui.playersSort, k = s.getAttribute('data-key');
       if (st.key === k) st.dir = -st.dir; else { st.key = k; st.dir = (k === 'name' || k === 'nr' || k === 'pos') ? 1 : -1; }
       render(); return;
     }

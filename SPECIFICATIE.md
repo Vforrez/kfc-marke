@@ -28,7 +28,7 @@ Clean sheet en tegendoelpunten tellen enkel voor spelers die **meer dan** 60 min
 ## Pagina's
 Kijkers: Overzicht, Fantasy (klassement met uitleg), Selectie (kaarten of tabel), Spelerspagina (stats, puntenverdeling, wedstrijd per wedstrijd, seizoenen), Wedstrijden, Wedstrijdpagina, Kaarten en schorsingen, Analyse (thuis/uit, doelpunten per wedstrijd, hoe we scoren en tegen krijgen, stilstaande fases, seizoenen vergelijken).
 
-Beheerder: Selectie (nummer, naam, positie, toevoegen, verwijderen), Wedstrijden (uitslag, spelers met minuten, goals, assists, kaarten, man van de match, bijzonderheden, teamcijfers), Puntentelling, Seizoen (nieuw seizoen, aanpassen, verwijderen), Back-up (export, import, startdata; herinnering "Laatste back-up: ..." in Beheer en op de back-uppagina, geel na 30 dagen, bijgehouden per toestel).
+Beheerder: Selectie (nummer, naam, positie, toevoegen, verwijderen), Wedstrijden (uitslag, spelers met minuten, goals, assists, kaarten, man van de match, bijzonderheden, teamcijfers), Puntentelling, Seizoen (nieuw seizoen, aanpassen, verwijderen), Back-up (export, import, startdata; herinnering "Laatste back-up: ..." in Beheer en op de back-uppagina, geel na 30 dagen, bijgehouden per toestel). In de wedstrijdpagina is de tabel "Opstelling en punten" sorteerbaar op elke kolom.
 
 ## Kaarten en vergelijken
 - Kaarten en schorsingen: elke kolom is sorteerbaar (standaard meeste gele kaarten eerst), met filters "Met kaarten / Iedereen" en "Alle / Schorsing open / Bijna schorsing".
