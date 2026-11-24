@@ -95,6 +95,29 @@ expect('2026: staf', S26.staff.length, 6);
   expect('B-ploeg: telt niet mee bij vergelijken op aantal wedstrijden', L.players.find(p => p.name === 'Jelle Duthoo').stats.yellowB, 0);
 }
 
+/* Schorsing wordt automatisch uitgezeten: er is geen vakje meer voor nodig */
+{
+  const d = JSON.parse(JSON.stringify(seed));
+  const base = engine.computeSeason('s2026', d);
+  const played = base.team.playedMatches;                       /* 13 gespeelde competitiewedstrijden */
+  const who = base.players.find(p => p.name === 'Robbe Pattijne');
+  const put = (mid, y, r) => d.lines.push({ id: mid + ':' + who.roster.id, match_id: mid, roster_id: who.roster.id, minutes: 90, yellow: y, red: r });
+  put(played[2].id, 1, 0); put(played[5].id, 1, 0); put(played[8].id, 1, 0);        /* 3e gele kaart in wedstrijd 9, daarna nog wedstrijden */
+  let w = engine.computeSeason('s2026', d).players.find(p => p.name === 'Robbe Pattijne');
+  expect('schorsing: 3 gele = 1 verdiend en uitgezeten', J2([w.stats.yellow, w.stats.suspended]), J2([3, 1]));
+  put(played[12].id, 0, 1);                                                          /* rood in de laatste wedstrijd: nog open */
+  w = engine.computeSeason('s2026', d).players.find(p => p.name === 'Robbe Pattijne');
+  expect('schorsing: rood in laatste wedstrijd is nog open', w.stats.suspended, 1);
+  d.matches.push({ id: 'mb-x', season_id: 's2026', date: '2099-01-01', opponent: 'B', home: true, competition: 'b' });
+  d.lines.push({ id: 'mb-x:' + who.roster.id, match_id: 'mb-x', roster_id: who.roster.id, minutes: null, yellow: 1, red: 0 });
+  w = engine.computeSeason('s2026', d).players.find(p => p.name === 'Robbe Pattijne');
+  expect('schorsing: B-kaart telt mee voor de 3-regel (4 gele)', w.stats.yellow, 4);
+  const sheet = engine.computeSeason('s2025', seed);
+  expect('schorsing 2025-26 klopt met de vinkjes uit de sheet', J2(sheet.players.filter(p => p.stats.suspended).map(p => p.name + ':' + p.stats.suspended).sort()),
+    J2(['Damien Kontogom:1', 'Emile Vanluchene:1', 'Jarne Wullaert:1', 'Siegurd Defoirdt:1']));
+}
+function J2(x) { return JSON.stringify(x); }
+
 console.log(bad === 0 ? 'ALLES KLOPT: de rekenmotor geeft dezelfde totalen als de oude sheet.' : bad + ' verschil(len) gevonden.');
 console.log('2025-26 wedstrijden:', T.played, 'W-G-V', T.W + '-' + T.G + '-' + T.V, 'doelsaldo', T.gf + '-' + T.ga);
 console.log('2026-27 stand na 13 wedstrijden: W-G-V', S26.team.W + '-' + S26.team.G + '-' + S26.team.V, 'doelsaldo', S26.team.gf + '-' + S26.team.ga, 'punten', S26.team.points);

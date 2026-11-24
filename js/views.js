@@ -267,7 +267,7 @@
     if (c.canEdit) html += '<div class="btn-row" style="margin-top:12px"><a class="btn small" href="#/beheer/spelers">' + U.icon('edit') + ' Nummer of positie wijzigen</a></div>';
 
     if (row.isStaff) {
-      html += '<div class="sec"><dl class="kv"><div><dt>Gele kaarten</dt><dd>' + s.yellow + '</dd></div><div><dt>Rode kaarten</dt><dd>' + s.red + '</dd></div><div><dt>Schorsingen</dt><dd>' + s.suspended + '</dd></div></dl></div>';
+      html += '<div class="sec"><dl class="kv"><div><dt>Gele kaarten</dt><dd>' + s.yellow + '</dd></div><div><dt>Rode kaarten</dt><dd>' + s.red + '</dd></div><div><dt>Schorsingen uitgezeten</dt><dd>' + s.suspended + '</dd></div></dl></div>';
       return html;
     }
     var gk = rs.position === 'keeper' || rs.position === 'verdediger';
@@ -367,7 +367,7 @@
         (yel.length ? '<li><span class="k">Kaarten</span><span>' + yel.map(function (x) { return (x.l.yellow ? '<span class="card-y"></span>' + (x.l.yellow > 1 ? x.l.yellow + ' ' : '') : '') + (x.l.red ? '<span class="card-r"></span>' : '') + esc(x.row.name); }).join('<br>') + '</span></li>' : '') +
         (motm.length ? '<li><span class="k">Man van de match</span><span class="podium">' + motm.map(function (x) { return '<span><b>' + x.l.motm + '</b>' + esc(x.row.name) + '</span>'; }).join('') + '</span></li>' : '') +
         (!scorers.length && !assists.length && !yel.length && !motm.length ? '<li class="muted">Geen bijzonderheden.</li>' : '') + '</ul></div>';
-      var own = pl.filter(function (x) { return x.l.own_goals || x.l.pen_missed || x.l.pen_saved || x.l.suspended; });
+      var own = pl.filter(function (x) { return x.l.own_goals || x.l.pen_missed || x.l.pen_saved; });
       html += '<div><h2>Teamcijfers</h2>' + teamPairs(m) + '</div></div></div>';
 
       var ms = ui.matchSort, mp = {};
@@ -395,7 +395,7 @@
           '<td class="num">' + U.dash(E.lineGoals(x.l)) + '</td><td class="num">' + U.dash(E.num(x.l.assists)) + '</td><td class="num">' + U.dash(E.num(x.l.yellow)) + '</td><td class="num">' + U.dash(E.num(x.l.red)) + '</td><td class="num">' + (x.l.motm || '<span class="zero">-</span>') + '</td><td class="num total">' + p.total + '</td></tr>';
       });
       html += '</tbody></table></div>' + (own.length ? '<p class="muted" style="margin-top:8px">' + own.map(function (x) {
-        var t = []; if (x.l.own_goals) t.push('eigen doelpunt'); if (x.l.pen_missed) t.push('gemiste strafschop'); if (x.l.pen_saved) t.push('gestopte strafschop'); if (x.l.suspended) t.push('geschorst');
+        var t = []; if (x.l.own_goals) t.push('eigen doelpunt'); if (x.l.pen_missed) t.push('gemiste strafschop'); if (x.l.pen_saved) t.push('gestopte strafschop');
         return esc(x.row.name) + ': ' + t.join(', ');
       }).join('. ') + '.</p>' : '') + '</div>';
     } else {
@@ -445,7 +445,7 @@
     if (!rows.length) return html + '<div class="empty"><p>' + (ui.cardsStatus !== 'alle' ? 'Niemand met deze status.' : 'Nog geen kaarten dit seizoen.') + '</p></div>';
     var sk = ui.cardsSort;
     html += '<div class="table-wrap"><table class="t"><thead><tr>' + th('Naam', 'name', sk, 'cards', { cls: 'l sticky' }) + th('Geel', 'yellow', sk, 'cards') + th('Rood', 'red', sk, 'cards') + th('Status', 'status', sk, 'cards', { cls: 'l' }) +
-      th('Verdiend', 'earned', sk, 'cards', { title: 'Verdiend: ' + every + ' gele of 1 rode kaart' }) + th('Uitgezeten', 'served', sk, 'cards', { title: 'Aantal schorsingen die zijn uitgezeten' }) + '</tr></thead><tbody>';
+      th('Verdiend', 'earned', sk, 'cards', { title: 'Verdiend: ' + every + ' gele of 1 rode kaart' }) + th('Uitgezeten', 'served', sk, 'cards', { title: 'Schorsingen waarna er al een wedstrijd gespeeld werd. Dit gaat automatisch.' }) + '</tr></thead><tbody>';
     rows.forEach(function (r) {
       var i = cardInfo(r, every), st;
       if (i.level === 3) st = '<span class="chip bad">Schorsing open</span>';

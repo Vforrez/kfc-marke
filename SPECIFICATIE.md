@@ -28,9 +28,10 @@ Clean sheet en tegendoelpunten tellen enkel voor spelers die **meer dan** 60 min
 ## Pagina's
 Kijkers: Overzicht, Fantasy (klassement met uitleg), Selectie (kaarten of tabel), Spelerspagina (stats, puntenverdeling, wedstrijd per wedstrijd, seizoenen), Wedstrijden, Wedstrijdpagina, Kaarten en schorsingen, Analyse (thuis/uit, doelpunten per wedstrijd, hoe we scoren en tegen krijgen, stilstaande fases, seizoenen vergelijken).
 
-Beheerder: Selectie (nummer, naam, positie, toevoegen, verwijderen), Wedstrijden (uitslag, spelers met minuten, goals, assists, kaarten, man van de match, bijzonderheden, teamcijfers), Puntentelling, Seizoen (nieuw seizoen, aanpassen, verwijderen), Back-up (export, import, startdata; herinnering "Laatste back-up: ..." in Beheer en op de back-uppagina, geel na 30 dagen, bijgehouden per toestel). In de wedstrijdpagina is de tabel "Opstelling en punten" sorteerbaar op elke kolom.
+Beheerder: Selectie (nummer, naam, positie, toevoegen, verwijderen), Wedstrijden (uitslag, spelers met minuten, goals, assists, kaarten, man van de match, bijzonderheden, teamcijfers), Kaarten B-ploeg, Puntentelling, Seizoen (nieuw seizoen, aanpassen, verwijderen), Back-up (export, import, startdata; herinnering "Laatste back-up: ..." in Beheer en op de back-uppagina, geel na 30 dagen, bijgehouden per toestel). In de wedstrijdpagina is de tabel "Opstelling en punten" sorteerbaar op elke kolom.
 
 ## Kaarten en vergelijken
+- Schorsingen worden automatisch berekend: elke rode kaart en elke 3e gele kaart (ook die van de B-ploeg) is een schorsing. Ze staat "open" tot er na de kaart nog een wedstrijd gespeeld is, daarna is ze uitgezeten. Er is dus geen vakje "Geschorst" meer om aan te vinken.
 - Kaarten en schorsingen: elke kolom is sorteerbaar (standaard meeste gele kaarten eerst), met filters "Met kaarten / Iedereen" en "Alle / Schorsing open / Bijna schorsing".
 - Seizoenen vergelijken (Analyse en spelerspagina) kan "even veel wedstrijden": van elk seizoen tellen enkel de eerste N gespeelde wedstrijden, standaard evenveel als het geselecteerde seizoen al speelde (aanpasbaar). Handmatige correcties tellen dan niet mee. "Volledig seizoen" blijft beschikbaar.
 

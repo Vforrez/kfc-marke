@@ -59,6 +59,17 @@
     return !!(rules.countCompetitions && rules.countCompetitions[c]);
   }
 
+  /* Schorsing: elke rode kaart en elke 'every'-de gele kaart. Uitgezeten als er daarna nog een wedstrijd gespeeld werd. */
+  function servedSuspensions(events, playedKeys, every) {
+    var ev = events.slice().sort(function (a, b) { return a.key < b.key ? -1 : a.key > b.key ? 1 : 0; }), cum = 0, served = 0;
+    function later(key) { return playedKeys.some(function (k) { return k > key; }); }
+    ev.forEach(function (e) {
+      for (var i = 0; i < e.y; i++) { cum++; if (cum % every === 0 && later(e.key)) served++; }
+      for (var j = 0; j < e.r; j++) { if (later(e.key)) served++; }
+    });
+    return served;
+  }
+
   /* Fantasy-punten voor één speler in één wedstrijd. */
   function linePoints(line, match, pos, rules) {
     pos = POSITIONS.indexOf(pos) >= 0 ? pos : 'middenvelder';
@@ -119,17 +130,20 @@
       (linesByMatch[l.match_id] = linesByMatch[l.match_id] || []).push(l);
     });
 
+    /* Een schorsing is uitgezeten zodra er na de kaart nog een wedstrijd gespeeld is. Niets om aan te vinken. */
+    var playedKeys = matches.filter(function (m) { return result(m) != null; }).map(function (m) { return (m.date || '') + ' ' + (m.kickoff || '00:00'); });
     var roster = data.roster.filter(function (r) { return r.season_id === seasonId; });
     var rows = roster.map(function (r) {
       var person = people[r.person_id] || { first_name: '?', last_name: '', id: r.person_id };
-      var st = blankStats(), fa = blankFantasy(), per = [];
+      var st = blankStats(), fa = blankFantasy(), per = [], cardEvents = [];
       (linesByRoster[r.id] || []).forEach(function (l) {
         var m = matchById[l.match_id];
         if (m.competition === B_COMP) {
           /* B-ploeg: alleen kaarten (en uitgezeten schorsing) voor de schorsingen, geen minuten, punten of statistieken */
           if (limit == null) {
             var by = n(l.yellow), br = n(l.red);
-            st.yellow += by; st.red += br; st.yellowB += by; st.redB += br; st.suspended += l.suspended ? 1 : 0;
+            st.yellow += by; st.red += br; st.yellowB += by; st.redB += br;
+            if (by || br) cardEvents.push({ key: (m.date || '') + ' 00:00', y: by, r: br });
             per.push({ match: m, line: l, pts: null, b: true });
           }
           return;
@@ -138,7 +152,7 @@
         var played = l.minutes != null && l.minutes !== '';
         if (played) { st.apps++; st.minutes += n(l.minutes); }
         ['g_play', 'g_corner', 'g_free', 'g_pen', 'assists', 'yellow', 'red', 'own_goals', 'pen_missed', 'pen_saved'].forEach(function (k) { st[k] += n(l[k]); });
-        st.suspended += l.suspended ? 1 : 0;
+        if (n(l.yellow) || n(l.red)) cardEvents.push({ key: (m.date || '') + ' ' + (m.kickoff || '00:00'), y: n(l.yellow), r: n(l.red) });
         var rank = n(l.motm);
         if (rank >= 1 && rank <= 3) { st['motm' + rank]++; st.motm++; }
         if (played && n(l.minutes) > rules.csMinMinutes && m.score_against != null && m.score_against !== '') {
@@ -151,6 +165,7 @@
           per.push({ match: m, line: l, pts: pts });
         } else per.push({ match: m, line: l, pts: null });
       });
+      st.suspended = servedSuspensions(cardEvents, playedKeys, rules.suspensionEvery || 3);
       st.goals = st.g_play + st.g_corner + st.g_free + st.g_pen;
       fa.adjust = limit != null ? 0 : n(r.adjust);
       fa.total = fa.minutes + fa.goals + fa.assists + fa.cleanSheet + fa.goalsAgainst + fa.red + fa.yellow + fa.motm + fa.specials + fa.adjust;
