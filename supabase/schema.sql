@@ -33,7 +33,7 @@ create table if not exists matches (
   kickoff       text,
   opponent      text not null,
   home          boolean not null default true,
-  competition   text not null default 'competitie' check (competition in ('competitie', 'beker', 'oefen')),
+  competition   text not null default 'competitie' check (competition in ('competitie', 'beker', 'oefen', 'b')),
   score_for     int,
   score_against int,
   ga_corner int, ga_free int, ga_pen int, ga_error int, ga_quality int,
