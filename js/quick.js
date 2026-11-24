@@ -135,7 +135,60 @@
     function mIn(c) { var r = [], re = rx('{M}', 'g'), m; while ((m = re.exec(c))) r.push(dec(m[1])); return r; }
     function ev(o) { events.push(o); }
 
+    /* Teamtellingen (los van spelers): hoekschoppen, vrije trappen en strafschoppen voor en tegen.
+       Werkt per deelzin; wat geen speler, doelpunt of kaart bevat en wel een aantal heeft, wordt hier opgeraapt. */
+    var NUMW = { een: 1, twee: 2, drie: 3, vier: 4, vijf: 5, zes: 6, zeven: 7, acht: 8, negen: 9, tien: 10 };
+    var TYPE_RE = '(corner\\w*|hoekschop\\w*|vrije\\W*trap\\w*|vrijetrap\\w*|vrije\\W*schop\\w*|vrijschop\\w*|strafschop\\w*|penalt\\w*)';
+    function teamKey(t) { return /^(?:corner|hoekschop)/.test(t) ? 'corners' : /^(?:vrije|vrijetrap|vrijschop)/.test(t) ? 'free' : 'pens'; }
+    function teamAdd(kind, side, n) {
+      var k = (side === 'opp' ? 'opp_' : 'sp_') + kind; team.counts = team.counts || {};
+      team.counts[k] = (team.counts[k] || 0) + n;
+    }
+    function teamCounts(sent) {
+      if (!new RegExp(TYPE_RE).test(sent) && !/\b\d+\s+tegen\b/.test(sent)) return sent;
+      var bits = sent.split(/(\s*,\s*|\s*;\s*|\s+en\s+|\s+terwijl\s+|\s+maar\s+)/), out = [], side = 'sp', lastKind = null, lastSide = 'sp', sepBefore = '';
+      for (var i = 0; i < bits.length; i += 2) {
+        var c = bits[i], sep = i > 0 ? bits[i - 1] : '', eaten = false;
+        var cueOpp = /\b(?:tegenstander\w*|tegenpartij|zij|ze|hun|thuisploeg|bezoekers|tegenpartij)\b/.test(c), cueUs = /\b(?:we|wij|ons|onze|marke|kfc)\b/.test(c);
+        if (cueOpp) side = 'opp'; else if (cueUs) side = 'sp';
+        var blocked = /@[a-z]{2}@/.test(c) || new RegExp(KW.goal.source).test(c) || new RegExp(KW.own.source).test(c) || /tegen\s?(?:doelpunt|goal)/.test(c) ||
+          KW.penSave.test(c) || KW.penMiss.test(c) || KW.assist.test(c) || KW.yellow.test(c) || KW.red.test(c);
+        if (!blocked) {
+          var mt = new RegExp(TYPE_RE).exec(c), n = null, sd = side;
+          if (mt) {
+            var kind = teamKey(mt[1]), pair = new RegExp('\\b(\\d{1,2})\\s*[-:\\u2013]\\s*(\\d{1,2})\\b').exec(c);
+            if (pair) {
+              var a = parseInt(pair[1], 10), b = parseInt(pair[2], 10);
+              if (/\btegen\b/.test(c) && /\bvoor\b/.test(c) && c.search(/\btegen\b/) < c.search(/\bvoor\b/)) { var tmp = a; a = b; b = tmp; }
+              teamAdd(kind, 'sp', a); teamAdd(kind, 'opp', b); lastKind = kind; eaten = true;
+            } else {
+              var nm = new RegExp('(?:\\b(\\d{1,2}|' + Object.keys(NUMW).join('|') + ')\\s*(?:x\\s*)?' + TYPE_RE + '|' + TYPE_RE + '\\W{0,3}(\\d{1,2})\\b)').exec(c);
+              if (nm) {
+                n = nm[1] ? (NUMW[nm[1]] || parseInt(nm[1], 10)) : parseInt(nm[4], 10);
+                var after = c.slice(nm.index + nm[0].length);
+                if (/^\s*(?:voor|door)\s+(?:de\s+)?(?:tegenstander|tegenpartij|zij|hun)\b|^\s*tegen\s+(?:ons|marke)\b/.test(after) || (/^\s*(?:tegen)\b(?!\s+\w)/.test(after) && cueOpp === false && /^\s*tegen\s*$/.test(after))) sd = 'opp';
+                else if (/^\s*voor\s+(?:ons|marke|kfc)\b|^\s*voor\s*$/.test(after)) sd = 'sp';
+                teamAdd(kind, sd, n); lastKind = kind; lastSide = sd; eaten = true;
+              }
+            }
+          } else {
+            /* "1 tegen" of "3 voor": zelfde soort als de vorige deelzin */
+            var el = /^\W*(?:en\s+)?(\d{1,2}|een|twee|drie|vier|vijf|zes)\s+(tegen|voor)\W*$/.exec(c);
+            if (el && lastKind) { teamAdd(lastKind, el[2] === 'tegen' ? 'opp' : 'sp', NUMW[el[1]] || parseInt(el[1], 10)); eaten = true; }
+            /* "de tegenstander 3" of "wij 5": zelfde soort als de vorige deelzin */
+            var el2 = /^\W*(?:en\s+)?(?:de\s+)?(tegenstander\w*|tegenpartij|zij|ze|hun|wij|we|ons|marke|kfc)\W+(?:met\W+)?(\d{1,2}|een|twee|drie|vier|vijf|zes)\W*$/.exec(c);
+            if (!eaten && el2 && lastKind) { teamAdd(lastKind, /^(?:wij|we|ons|marke|kfc)$/.test(el2[1]) ? 'sp' : 'opp', NUMW[el2[2]] || parseInt(el2[2], 10)); eaten = true; }
+          }
+        }
+        if (!eaten) { out.push((out.length ? sep : '') + c); }
+        else if (!out.length) { sepBefore = ''; }
+      }
+      return out.join('').replace(/^[\s,;]+|[\s,;]+$/g, '');
+    }
+
     sentencesOf(mz.s).forEach(function (sent) {
+      /* teamtellingen: "hoekschoppen 5-3", "we hadden 4 corners en 2 vrije trappen, zij 1 corner" */
+      sent = teamCounts(sent); if (!sent) return;
       /* uitslag */
       var sc = /(?:uitslag|eindstand|eindscore|score|wint|winnen|wonnen|won|gewonnen|verliest|verliezen|verloren|verloor|verlies|gelijkgespeeld|gelijk|gelijkspel|winst|nederlaag|zege)\b[^0-9]{0,25}?(\d+)\s*[-:]\s*(\d+)/.exec(sent) || /^\s*(\d+)\s*[-:]\s*(\d+)\s*$/.exec(sent);
       if (sc) {
@@ -143,7 +196,7 @@
         if (/\b(?:won\w*|wint|winnen|gewonnen|winst|zege)\b/.test(w)) { team.score_for = Math.max(a, b); team.score_against = Math.min(a, b); }
         else if (/\b(?:verlo\w*|verlies\w*|verliez\w*|nederlaag)\b/.test(w)) { team.score_for = Math.min(a, b); team.score_against = Math.max(a, b); }
         else { team.score_for = a; team.score_against = b; }
-        sent = sent.replace(sc[0], ' ').replace(/^\W+|\W+$/g, '');
+        sent = sent.replace(sc[0], ' ').replace(/^[\s,;:\-]+|[\s,;:\-]+$/g, '');
         if (!sent) return;
       }
       /* lijsten: "Doelpunten: Jarne (assist Jelle), Bob uit corner" en "Assists: Jelle, Thomas" */
@@ -329,6 +382,7 @@
     if (t.score_for != null) { team.score_for = t.score_for; team.score_against = t.score_against; }
     if (t.ga) team.ga = t.ga;
     if (t.oppOwnGoals) team.oppOwnGoals = t.oppOwnGoals;
+    if (t.counts) team.counts = t.counts;
     return { rows: rows, replace: Object.keys(replace), goalsMode: 'exact', team: team, ambiguous: ambiguous, warnings: warnings, unparsed: parsed.unparsed, source: 'tekst' };
   }
 

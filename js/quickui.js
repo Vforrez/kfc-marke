@@ -35,6 +35,7 @@
       '<li><b>Man van de match:</b> "Man van de match: Jarne, Robbe, Emile" (in volgorde 1e, 2e, 3e).</li>' +
       '<li><b>Minuten:</b> "Basis: Robbe, Emile, ... Bank: Lander, ...", "Arne 60 minuten", "Lander viel in voor Arne na 70 minuten", "Arne geblesseerd na 30 minuten".</li>' +
       '<li><b>Bijzonder:</b> "Robbe stopt een penalty", "Bob mist een penalty", "eigen doelpunt van Emile".</li>' +
+      '<li><b>Hoekschoppen, vrije trappen en strafschoppen van het team:</b> "corners 5-3" (Marke eerst), "we hadden 4 corners en 2 vrije trappen, de tegenstander 1 corner", "strafschoppen: 1 voor, 0 tegen".</li>' +
       '<li><b>Uitslag en tegendoelpunten:</b> "Uitslag 3-1", "we verloren met 1-3", "tegendoelpunt na een corner" (of "door eigen fout").</li>' +
       '<li>Heten twee spelers hetzelfde, dan vraag ik welke je bedoelt. Je kan ook de achternaam, "Lucas C" of een rugnummer ("nr 9") gebruiken.</li></ul></details>' +
       '</div></details>';
@@ -94,6 +95,13 @@
         var t = plan.team, tl = [];
         if (t.score_for != null) tl.push('Uitslag: KFC Marke ' + t.score_for + ' - ' + t.score_against + ' tegenstander');
         if (t.ga) { var lab = { ga_corner: 'na een corner', ga_free: 'na een vrije trap', ga_pen: 'strafschop', ga_error: 'door eigen fout', ga_quality: 'door kwaliteit van de tegenstander', ga_onbekend: 'oorzaak onbekend' }; Object.keys(t.ga).forEach(function (k) { tl.push('Tegendoelpunt' + (t.ga[k] > 1 ? 'en' : '') + ': ' + t.ga[k] + ' ' + lab[k]); }); }
+        if (t.counts) {
+          var cl = [['corners', 'Hoekschoppen'], ['free', 'Vrije trappen'], ['pens', 'Strafschoppen']];
+          cl.forEach(function (x) {
+            var a = t.counts['sp_' + x[0]], b = t.counts['opp_' + x[0]];
+            if (a != null || b != null) tl.push(x[1] + ': KFC Marke ' + (a == null ? '-' : a) + ', tegenstander ' + (b == null ? '-' : b));
+          });
+        }
         if (t.oppOwnGoals) tl.push('Eigen doelpunt van de tegenstander (telt enkel mee in de uitslag)');
         if (tl.length) h += '<ul class="qlist team">' + tl.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul>';
         var replaced = plan.replace.filter(hasExisting);
@@ -185,6 +193,10 @@
       var t = plan.team || {};
       if (t.score_for != null) { f.score_for.value = t.score_for; f.score_against.value = t.score_against; }
       if (plan.match && plan.match.score_for != null) { f.score_for.value = plan.match.score_for; f.score_against.value = plan.match.score_against; }
+      if (t.counts) {
+        Object.keys(t.counts).forEach(function (k) { if (f[k]) f[k].value = t.counts[k]; });
+        var det = f.sp_corners && f.sp_corners.closest('details'); if (det) det.open = true;
+      }
       if (t.ga) {
         ['ga_corner', 'ga_free', 'ga_pen', 'ga_error', 'ga_quality'].forEach(function (k) { f[k].value = t.ga[k] ? t.ga[k] : ''; });
       }

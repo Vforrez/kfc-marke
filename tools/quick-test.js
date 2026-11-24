@@ -88,6 +88,17 @@ eq('tegendoelpunten', r.plan.team, { ga: { ga_corner: 1, ga_error: 1 } });
   const q = quick.parseText('Noé scoort na assist van nr 9', withNr), pl = quick.textPlan(q, {}, withNr);
   eq('rugnummer', Object.keys(pl.rows).map(k => nameOf[k]).sort(), ['Jarne Wullaert', 'Noé Rogard']); }
 
+r = plan('Hoekschoppen 6-2. Vrije trappen: 4-7. Strafschoppen 1-0');
+eq('teamtellingen paren', r.plan.team.counts, { sp_corners: 6, opp_corners: 2, sp_free: 4, opp_free: 7, sp_pens: 1, opp_pens: 0 });
+r = plan('We hadden 5 corners en 3 vrije trappen, de tegenstander 2 corners');
+eq('teamtellingen zinnen', r.plan.team.counts, { sp_corners: 5, sp_free: 3, opp_corners: 2 });
+r = plan('2 strafschoppen voor Marke, 1 tegen');
+eq('teamtellingen voor/tegen', r.plan.team.counts, { sp_pens: 2, opp_pens: 1 });
+r = plan('Uitslag 3-1, corners 5-3, Jelle scoort 2 keer. Jarne scoort uit een strafschop, vrije trappen 4-1');
+eq('teamtellingen naast spelers', [r.plan.team.score_for, r.plan.team.counts.sp_corners, r.plan.team.counts.opp_free, rowsByName(r.plan)['Jelle Duthoo'].g_play, rowsByName(r.plan)['Jarne Wullaert'].g_pen], [3, 5, 1, 2, 1]);
+r = plan('Jarne scoort na een corner van Jelle. Robbe stopt een penalty.');
+eq('speler-corner blijft speler', [r.plan.team.counts, rowsByName(r.plan)['Jarne Wullaert'].g_corner, rowsByName(r.plan)['Robbe Pattijne'].pen_saved], [undefined, 1, 1]);
+
 r = plan('Het was een mooie wedstrijd met veel sfeer.');
 eq('onbegrepen tekst', r.p.unparsed.length > 0 && Object.keys(r.plan.rows).length === 0, true);
 
