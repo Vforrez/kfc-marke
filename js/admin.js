@@ -50,6 +50,7 @@
       ['#/beheer/wedstrijden', 'cal', 'Wedstrijden', missing ? missing + ' gespeeld zonder spelersgegevens' : 'Uitslagen en spelersgegevens invoeren'],
       ['#/beheer/spelers', 'users', 'Selectie', 'Rugnummers, posities en spelers toevoegen'],
       ['#/beheer/rbfa', 'cal', 'RBFA-knop', 'Wedstrijden uit RBFA overnemen'],
+      ['#/beheer/b-ploeg', 'users', 'Kaarten B-ploeg', 'Kaarten van A-spelers die bij de B-ploeg speelden'],
       ['#/beheer/regels', 'star', 'Puntentelling', 'Fantasyregels van dit seizoen'],
       ['#/beheer/seizoen', 'plus', 'Seizoen', 'Nieuw seizoen starten of dit seizoen aanpassen'],
       ['#/beheer/backup', 'chart', 'Back-up', 'Bewaren, terugzetten en online zetten']
@@ -426,6 +427,80 @@
     return { html: html, bind: bind };
   }
 
+
+  /* ================= Kaarten B-ploeg ================= */
+  /* Een A-speler die bij de B-ploeg speelt krijgt daar soms een kaart. Die telt mee voor de schorsing,
+     maar niet voor minuten, statistieken of fantasypunten. Opgeslagen als wedstrijd met competitie "b". */
+  function bListPage(c) {
+    var S = c.S, list = (S.bMatches || []).slice().sort(function (a, b) { return (b.date || '').localeCompare(a.date || ''); });
+    var html = crumbs([['Kaarten B-ploeg']]) + '<div class="page-head"><div><h1>Kaarten B-ploeg</h1><p>Seizoen ' + esc(S.season.name) + '. Speelde een A-speler bij de B-ploeg en kreeg hij een kaart? Noteer die hier. Ze tellen mee voor de schorsing, maar niet voor minuten, statistieken of fantasypunten.</p></div>' +
+      '<a class="btn primary" href="#/beheer/b-ploeg/nieuw">' + U.icon('plus') + ' Nieuwe B-wedstrijd</a></div>';
+    if (!list.length) return { html: html + '<div class="empty"><p>Nog geen kaarten van de B-ploeg genoteerd.</p></div>' };
+    html += '<ul class="match-list">' + list.map(function (m) {
+      var ls = S.linesByMatch[m.id] || [], y = 0, r = 0;
+      var names = ls.map(function (l) {
+        y += E.num(l.yellow); r += E.num(l.red);
+        var ro = S.rosterById[l.roster_id], row = ro && S.players.concat(S.staff).filter(function (x) { return x.roster.id === ro.id; })[0];
+        return row ? row.name + ' (' + (l.yellow ? l.yellow + ' geel' : '') + (l.yellow && l.red ? ', ' : '') + (l.red ? 'rood' : '') + ')' : '';
+      }).filter(Boolean);
+      return '<li><a class="row" href="#/beheer/b-ploeg/' + esc(m.id) + '"><div class="d">' + esc(U.dateShort(m.date)) + '</div><div></div>' +
+        '<div class="opp">' + esc(m.opponent || 'B-ploeg') + '<small>' + esc(names.join(', ') || 'Geen kaarten') + '</small></div>' +
+        '<div class="sc"><span class="chip">' + y + ' geel, ' + r + ' rood</span></div></a></li>';
+    }).join('') + '</ul>';
+    return { html: html };
+  }
+
+  function bForm(c, id) {
+    var S = c.S, isNew = id === 'nieuw', m = isNew ? { date: U.today(), opponent: '' } : S.matchById[id];
+    if (!m || (!isNew && m.competition !== E.B_COMP)) return { html: '<div class="empty"><p>Deze B-wedstrijd bestaat niet.</p><a class="btn" href="#/beheer/b-ploeg">Terug</a></div>' };
+    var lineOf = {}; (isNew ? [] : (S.linesByMatch[m.id] || [])).forEach(function (l) { lineOf[l.roster_id] = l; });
+    var players = S.players.slice().sort(function (a, b) { return (parseInt(a.roster.number, 10) || 999) - (parseInt(b.roster.number, 10) || 999) || a.name.localeCompare(b.name, 'nl'); });
+    function v(x) { return x ? x : ''; }
+    var html = crumbs([['Kaarten B-ploeg', '#/beheer/b-ploeg'], [isNew ? 'Nieuwe B-wedstrijd' : 'B-wedstrijd']]) +
+      '<div class="page-head"><div><h1>' + (isNew ? 'Nieuwe B-wedstrijd' : 'B-wedstrijd bewerken') + '</h1><p>Vul enkel de kaarten in van A-spelers. Laat de rest leeg.</p></div></div>' +
+      '<form id="b-form" class="panel" novalidate><div class="form-grid"><label class="fld">Datum<input type="date" name="date" value="' + esc(m.date) + '" required></label>' +
+      '<label class="fld">Tegenstander of opmerking (niet verplicht)<input type="text" name="opponent" value="' + esc(m.opponent || '') + '" placeholder="Bijvoorbeeld: B-ploeg thuis tegen Zwevegem"></label></div>' +
+      '<h3 style="margin:18px 0 8px">Kaarten van A-spelers</h3><div class="bcards">' +
+      players.map(function (r) {
+        var l = lineOf[r.roster.id] || {};
+        return '<div class="brow" data-rid="' + esc(r.roster.id) + '"><span class="nr">' + esc(r.roster.number || '-') + '</span><span class="nmx">' + esc(r.name) + '</span>' +
+          '<label>Geel<input type="number" inputmode="numeric" min="0" max="2" data-f="yellow" value="' + esc(v(l.yellow)) + '"></label>' +
+          '<label>Rood<input type="number" inputmode="numeric" min="0" max="1" data-f="red" value="' + esc(v(l.red)) + '"></label></div>';
+      }).join('') + '</div>' +
+      '<div class="sticky-save">' + (isNew ? '' : '<button type="button" class="btn ghost" data-act="delete-b" style="color:var(--coral)">' + U.icon('trash') + ' Verwijderen</button>') +
+      '<span class="muted" id="b-hint"></span><button class="btn primary" type="submit">' + U.icon('check') + ' Opslaan</button></div></form>';
+    function bind(el) {
+      var form = q(el, '#b-form'), dirty = false;
+      form.addEventListener('input', function () { dirty = true; q(el, '#b-hint').textContent = 'Wijzigingen nog niet bewaard'; });
+      window.onbeforeunload = function () { return dirty ? 'Niet-bewaarde wijzigingen' : undefined; };
+      KFC.app.onLeave = function () { window.onbeforeunload = null; KFC.app.onLeave = null; };
+      form.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var f = form.elements;
+        if (!f.date.value) { U.toast('Vul de datum in.', 'err'); return; }
+        var match = { id: isNew ? Store.newId('mb' + S.season.start_year) : m.id, season_id: S.season.id, date: f.date.value, kickoff: null,
+          opponent: f.opponent.value.trim() || 'B-ploeg', home: true, competition: E.B_COMP, score_for: null, score_against: null };
+        var lines = [], remove = [];
+        qa(form, '.brow').forEach(function (row) {
+          var rid = row.getAttribute('data-rid'), y = intOrNull(q(row, '[data-f=yellow]').value), r = intOrNull(q(row, '[data-f=red]').value), had = lineOf[rid];
+          if (!y && !r) { if (had) remove.push(had.id); return; }
+          lines.push({ id: had ? had.id : match.id + ':' + rid, match_id: match.id, roster_id: rid, minutes: null, yellow: y || null, red: r || null });
+        });
+        if (!lines.length && isNew) { U.toast('Vul minstens één kaart in.', 'err'); return; }
+        var btn = q(form, 'button[type=submit]'); btn.disabled = true;
+        guard(async function () { await Store.saveMatch(match, lines, remove); dirty = false; U.toast('Kaarten bewaard'); go('#/beheer/b-ploeg'); }).then(function () { btn.disabled = false; });
+      });
+      var del = q(form, '[data-act="delete-b"]');
+      if (del) del.addEventListener('click', function () {
+        U.confirm({ title: 'Deze B-wedstrijd verwijderen?', text: 'De kaarten hiervan tellen dan niet meer mee voor de schorsingen. Dit kan niet ongedaan gemaakt worden.', ok: 'Verwijderen', danger: true }).then(function (ok) {
+          if (!ok) return; dirty = false;
+          guard(async function () { await Store.remove('matches', [m.id]); U.toast('B-wedstrijd verwijderd'); go('#/beheer/b-ploeg'); });
+        });
+      });
+    }
+    return { html: html, bind: bind };
+  }
+
   /* ================= Back-up ================= */
   function backupPage(c) {
     var d = c.data, online = Store.mode === 'supabase';
@@ -478,6 +553,7 @@
     if (sub === 'wedstrijden') return matchesPage(c);
     if (sub === 'wedstrijd') return matchForm(c, decodeURIComponent(parts[2] || 'nieuw'));
     if (sub === 'rbfa') return KFC.quickui.helpPage(c);
+    if (sub === 'b-ploeg') return parts[2] ? bForm(c, decodeURIComponent(parts[2])) : bListPage(c);
     if (sub === 'regels') return rulesPage(c);
     if (sub === 'seizoen') return seasonPage(c);
     if (sub === 'backup') return backupPage(c);

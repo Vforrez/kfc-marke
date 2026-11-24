@@ -39,6 +39,12 @@ Beheerder: Selectie (nummer, naam, positie, toevoegen, verwijderen), Wedstrijden
 - **RBFA (halfautomatisch):** een knop (bladwijzer) op de RBFA-wedstrijdpagina kopieert opstelling, bank, wissels, kaarten, doelpunten, uitslag, datum en rugnummers. Plakken in het formulier of in Beheer, Wedstrijden geeft een voorbeeld met herkende spelers (niet herkende kan je toewijzen of negeren). Minuten worden berekend uit basis, wissels en rode kaart. RBFA kent geen assists, geen man van de match en niet hoe een doelpunt viel; die vul je aan met tekst. Er is geen automatische koppeling: de knop leest enkel de pagina die de beheerder zelf opent.
 - Het gewone invulformulier blijft altijd beschikbaar.
 
+## Kaarten B-ploeg
+- A-spelers kunnen bij de B-ploeg spelen en daar een kaart krijgen. Die telt mee voor de schorsing (geel, rood), maar niet voor minuten, doelpunten, wedstrijden, uitslagen of fantasypunten.
+- Invoer: Beheer, Kaarten B-ploeg. Per B-wedstrijd een datum, een optionele opmerking en per speler het aantal gele en rode kaarten.
+- Technisch: opgeslagen als wedstrijd met competitie `b` en spelersregels met enkel `yellow`/`red`. De rekenmotor houdt `b`-wedstrijden uit alle lijsten en teamcijfers en telt enkel de kaarten (ook in `yellowB` en `redB`). Bij "vergelijken op aantal wedstrijden" tellen ze niet mee.
+- Het kaartenoverzicht toont "2 (1 B)" voor het aantal kaarten waarvan er 1 bij de B-ploeg was; de spelerspagina toont de B-rijen apart.
+
 ## Gegevens
 Tabellen: `seasons`, `people`, `roster`, `matches`, `lines`. Zie `supabase/schema.sql`. Lokaal staat dezelfde structuur in de browser (localStorage). Online: Supabase met lezen voor iedereen en schrijven enkel voor de ingelogde gebruiker.
 

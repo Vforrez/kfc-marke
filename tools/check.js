@@ -75,6 +75,26 @@ expect('2026: staf', S26.staff.length, 6);
   expect('limiet 2026: gelijk aan volledig (13 gespeeld)', L26.team.points, S26.team.points);
 }
 
+/* B-ploeg: kaarten tellen mee voor de schorsing, niets anders */
+{
+  const d = JSON.parse(JSON.stringify(seed)); const J = x => JSON.stringify(x);
+  const base = engine.computeSeason('s2026', d);
+  const who = base.players.find(p => p.name === 'Jelle Duthoo');
+  d.matches.push({ id: 'mb-test', season_id: 's2026', date: '2026-11-15', opponent: 'B-ploeg', home: true, competition: 'b' });
+  d.lines.push({ id: 'mb-test:' + who.roster.id, match_id: 'mb-test', roster_id: who.roster.id, minutes: null, yellow: 2, red: 1 });
+  const B = engine.computeSeason('s2026', d);
+  const w2 = B.players.find(p => p.name === 'Jelle Duthoo');
+  expect('B-ploeg: geel telt mee', w2.stats.yellow, who.stats.yellow + 2);
+  expect('B-ploeg: rood telt mee', w2.stats.red, who.stats.red + 1);
+  expect('B-ploeg: waarvan B', J([w2.stats.yellowB, w2.stats.redB]), J([2, 1]));
+  expect('B-ploeg: fantasy ongewijzigd', w2.fantasy.total, who.fantasy.total);
+  expect('B-ploeg: minuten en wedstrijden ongewijzigd', J([w2.stats.minutes, w2.stats.apps]), J([who.stats.minutes, who.stats.apps]));
+  expect('B-ploeg: team ongewijzigd', J([B.team.played, B.team.points, B.allMatches.length]), J([base.team.played, base.team.points, base.allMatches.length]));
+  expect('B-ploeg: aparte lijst', B.bMatches.length, 1);
+  const L = engine.computeSeason('s2026', d, { limit: 5 });
+  expect('B-ploeg: telt niet mee bij vergelijken op aantal wedstrijden', L.players.find(p => p.name === 'Jelle Duthoo').stats.yellowB, 0);
+}
+
 console.log(bad === 0 ? 'ALLES KLOPT: de rekenmotor geeft dezelfde totalen als de oude sheet.' : bad + ' verschil(len) gevonden.');
 console.log('2025-26 wedstrijden:', T.played, 'W-G-V', T.W + '-' + T.G + '-' + T.V, 'doelsaldo', T.gf + '-' + T.ga);
 console.log('2026-27 stand na 13 wedstrijden: W-G-V', S26.team.W + '-' + S26.team.G + '-' + S26.team.V, 'doelsaldo', S26.team.gf + '-' + S26.team.ga, 'punten', S26.team.points);

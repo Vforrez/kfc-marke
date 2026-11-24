@@ -294,6 +294,11 @@
       html += '<div class="sec"><h2>Wedstrijd per wedstrijd</h2><div class="table-wrap" style="margin-top:12px"><table class="t"><thead><tr><th class="l sticky">Tegenstander</th><th>Uitslag</th><th>Min.</th><th>Goals</th><th>Assists</th><th>Geel</th><th>Rood</th><th>MvdM</th><th>Punten</th></tr></thead><tbody>';
       row.perMatch.forEach(function (pm) {
         var l = pm.line, m = pm.match, g = E.lineGoals(l);
+        if (pm.b) {
+          html += '<tr><td class="l sticky">B-ploeg <span class="muted">' + esc(U.dateShort(m.date)) + (m.opponent && m.opponent !== 'B-ploeg' ? ', ' + esc(m.opponent) : '') + '</span></td><td><span class="muted">kaarten enkel</span></td><td class="num"><span class="zero">-</span></td><td class="num"><span class="zero">-</span></td><td class="num"><span class="zero">-</span></td>' +
+            '<td class="num">' + (l.yellow ? '<span class="card-y"></span>' + l.yellow : '<span class="zero">0</span>') + '</td><td class="num">' + (l.red ? '<span class="card-r"></span>' + l.red : '<span class="zero">0</span>') + '</td><td class="num"><span class="zero">-</span></td><td class="num total"></td></tr>';
+          return;
+        }
         var tip = pm.pts ? 'Minuten ' + pm.pts.minutes + ', goals ' + pm.pts.goals + ', assists ' + pm.pts.assists + ', clean sheet ' + pm.pts.cleanSheet + ', tegendoelpunten ' + pm.pts.goalsAgainst + ', kaarten ' + (pm.pts.yellow + pm.pts.red) + ', man van de match ' + pm.pts.motm + ', bijzonder ' + pm.pts.specials : '';
         html += '<tr><td class="l sticky"><a href="#/wedstrijd/' + esc(m.id) + '">' + esc(m.opponent) + '</a> <span class="muted">' + (m.home ? 'T' : 'U') + '</span></td><td>' + U.resultChip(m) + ' <span class="num">' + esc(U.score(m)) + '</span></td>' +
           '<td class="num">' + (l.minutes == null ? '<span class="zero">-</span>' : (l.minutes === 0 ? 'bank' : l.minutes)) + '</td><td class="num">' + U.dash(g) + '</td><td class="num">' + U.dash(E.num(l.assists)) + '</td>' +
@@ -423,7 +428,7 @@
   }
   V.cards = function (c) {
     var S = c.S, every = S.rules.suspensionEvery || 3;
-    var html = '<div class="page-head"><div><h1>Kaarten en schorsingen</h1><p>Na elke ' + every + ' gele kaarten volgt een schorsing. Een rode kaart is een schorsing. Klik op een kolomtitel om te sorteren.</p></div>' +
+    var html = '<div class="page-head"><div><h1>Kaarten en schorsingen</h1><p>Na elke ' + every + ' gele kaarten volgt een schorsing. Een rode kaart is een schorsing. Kaarten bij de B-ploeg tellen mee (aangeduid met B). Klik op een kolomtitel om te sorteren.</p></div>' +
       '<div class="btn-row"><div class="seg" role="group" aria-label="Wie tonen">' +
       '<button type="button" data-set="cardsOnly=ja" aria-pressed="' + (ui.cardsOnly === 'ja') + '">Met kaarten</button><button type="button" data-set="cardsOnly=nee" aria-pressed="' + (ui.cardsOnly === 'nee') + '">Iedereen</button></div>' +
       '<div class="seg" role="group" aria-label="Status">' + [['alle', 'Alle'], ['open', 'Schorsing open'], ['bijna', 'Bijna schorsing']].map(function (o) {
@@ -447,7 +452,7 @@
       else if (i.level === 2) st = '<span class="chip warn">Volgende gele is schorsing</span>';
       else if (i.level === 1) st = '<span class="chip">Nog ' + i.cs.left + ' geel tot schorsing</span>';
       else st = '<span class="muted">-</span>';
-      html += '<tr><td class="l sticky"><a href="' + personHref(r) + '">' + esc(r.name) + '</a>' + (r.isStaff ? ' <span class="muted">staf</span>' : '') + '</td><td class="num">' + (i.y ? '<span class="card-y"></span>' + i.y : '<span class="zero">0</span>') + '</td><td class="num">' + (i.rd ? '<span class="card-r"></span>' + i.rd : '<span class="zero">0</span>') + '</td>' +
+      html += '<tr><td class="l sticky"><a href="' + personHref(r) + '">' + esc(r.name) + '</a>' + (r.isStaff ? ' <span class="muted">staf</span>' : '') + '</td><td class="num">' + (i.y ? '<span class="card-y"></span>' + i.y : '<span class="zero">0</span>') + (r.stats.yellowB ? ' <small class="muted" title="Waarvan bij de B-ploeg">(' + r.stats.yellowB + ' B)</small>' : '') + '</td><td class="num">' + (i.rd ? '<span class="card-r"></span>' + i.rd : '<span class="zero">0</span>') + (r.stats.redB ? ' <small class="muted" title="Waarvan bij de B-ploeg">(' + r.stats.redB + ' B)</small>' : '') + '</td>' +
         '<td class="l">' + st + '</td><td class="num">' + U.dash(i.earned) + '</td><td class="num">' + U.dash(i.served) + '</td></tr>';
     });
     return html + '</tbody></table></div>';

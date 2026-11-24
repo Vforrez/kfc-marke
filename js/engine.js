@@ -9,6 +9,8 @@
   var STAFF_ROLES = ['trainer', 'keeperstrainer', 'delegee', 'verzorger'];
   var STAFF_LABEL = { trainer: 'Trainer', keeperstrainer: 'Keeperstrainer', delegee: 'Delegee', verzorger: 'Verzorger' };
   var COMPETITIONS = { competitie: 'Competitie', beker: 'Beker', oefen: 'Oefenwedstrijd' };
+  /* Wedstrijden van de B-ploeg: enkel de kaarten van A-spelers tellen mee voor de schorsing. */
+  var B_COMP = 'b';
 
   /* Standaardregels = Fantasy_Marke_seizoen_2025-26.docx */
   var DEFAULT_RULES = {
@@ -86,7 +88,7 @@
   }
 
   function blankStats() {
-    return { apps: 0, minutes: 0, goals: 0, g_play: 0, g_corner: 0, g_free: 0, g_pen: 0, assists: 0, yellow: 0, red: 0,
+    return { apps: 0, minutes: 0, goals: 0, g_play: 0, g_corner: 0, g_free: 0, g_pen: 0, assists: 0, yellow: 0, red: 0, yellowB: 0, redB: 0,
       motm1: 0, motm2: 0, motm3: 0, motm: 0, own_goals: 0, pen_missed: 0, pen_saved: 0, suspended: 0, cleanSheets: 0, conceded: 0 };
   }
   function blankFantasy() {
@@ -101,11 +103,13 @@
     if (!season) return null;
     var rules = rulesFor(season);
     var people = {}; data.people.forEach(function (p) { people[p.id] = p; });
-    var allMatches = data.matches.filter(function (m) { return m.season_id === seasonId; })
+    var everyMatch = data.matches.filter(function (m) { return m.season_id === seasonId; })
       .sort(function (a, b) { return (a.date || '').localeCompare(b.date || '') || (a.kickoff || '').localeCompare(b.kickoff || ''); });
+    var allMatches = everyMatch.filter(function (m) { return m.competition !== B_COMP; });
+    var bMatches = everyMatch.filter(function (m) { return m.competition === B_COMP; });
     var matches = allMatches.filter(function (m) { return isCounted(m, rules); });
     if (limit != null) { var seen = 0; matches = matches.filter(function (m) { return result(m) != null && ++seen <= limit; }); }
-    var matchById = {}; allMatches.forEach(function (m) { matchById[m.id] = m; });
+    var matchById = {}; everyMatch.forEach(function (m) { matchById[m.id] = m; });
     var counted = {}; matches.forEach(function (m) { counted[m.id] = true; });
 
     var linesByRoster = {}, linesByMatch = {};
@@ -121,6 +125,15 @@
       var st = blankStats(), fa = blankFantasy(), per = [];
       (linesByRoster[r.id] || []).forEach(function (l) {
         var m = matchById[l.match_id];
+        if (m.competition === B_COMP) {
+          /* B-ploeg: alleen kaarten (en uitgezeten schorsing) voor de schorsingen, geen minuten, punten of statistieken */
+          if (limit == null) {
+            var by = n(l.yellow), br = n(l.red);
+            st.yellow += by; st.red += br; st.yellowB += by; st.redB += br; st.suspended += l.suspended ? 1 : 0;
+            per.push({ match: m, line: l, pts: null, b: true });
+          }
+          return;
+        }
         if (!counted[m.id]) return;
         var played = l.minutes != null && l.minutes !== '';
         if (played) { st.apps++; st.minutes += n(l.minutes); }
@@ -178,7 +191,7 @@
     });
     var hasLines = {}; matches.forEach(function (m) { hasLines[m.id] = (linesByMatch[m.id] || []).length > 0; });
 
-    return { limited: limit != null, limit: limit, season: season, rules: rules, matches: matches, allMatches: allMatches, players: players, staff: staff,
+    return { limited: limit != null, limit: limit, season: season, rules: rules, matches: matches, allMatches: allMatches, bMatches: bMatches, players: players, staff: staff,
       team: T, linesByMatch: linesByMatch, matchById: matchById, hasLines: hasLines, rosterById: roster.reduce(function (o, r) { o[r.id] = r; return o; }, {}) };
   }
 
@@ -199,7 +212,7 @@
 
   var api = {
     POSITIONS: POSITIONS, POS_LABEL: POS_LABEL, POS_SHORT: POS_SHORT, STAFF_ROLES: STAFF_ROLES, STAFF_LABEL: STAFF_LABEL,
-    COMPETITIONS: COMPETITIONS, DEFAULT_RULES: DEFAULT_RULES, merge: merge, rulesFor: rulesFor, clone: clone,
+    COMPETITIONS: COMPETITIONS, B_COMP: B_COMP, DEFAULT_RULES: DEFAULT_RULES, merge: merge, rulesFor: rulesFor, clone: clone,
     linePoints: linePoints, lineGoals: lineGoals, result: result, computeSeason: computeSeason, cardStatus: cardStatus,
     fullName: fullName, num: n, sortBy: sortBy, isCounted: isCounted
   };
