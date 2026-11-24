@@ -65,6 +65,11 @@ create index if not exists lines_match_idx    on lines(match_id);
 create index if not exists lines_roster_idx   on lines(roster_id);
 
 -- Toegang: iedereen mag lezen (de kijkversie), enkel een ingelogde gebruiker mag wijzigen.
+-- Rechten op de tabellen. Nieuwe Supabase-projecten geven die niet meer automatisch, dus zonder deze regels
+-- krijg je "permission denied for table ...". De rijregels (RLS) hieronder beperken wie wat mag.
+grant usage on schema public to anon, authenticated;
+grant select on seasons, people, roster, matches, lines to anon;
+grant select, insert, update, delete on seasons, people, roster, matches, lines to authenticated;
 alter table seasons enable row level security;
 alter table people  enable row level security;
 alter table roster  enable row level security;

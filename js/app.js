@@ -82,7 +82,11 @@
     var navigated = hashNow !== lastHash; lastHash = hashNow;
 
     if (Store.error) {
-      view.innerHTML = '<div class="empty"><p>De gegevens konden niet geladen worden.</p><p class="muted">' + esc(Store.error.message || '') + '</p><button class="btn primary" data-act="retry">Opnieuw proberen</button></div>';
+      var em = String(Store.error.message || ''), hint = '';
+      if (/permission denied/i.test(em)) hint = 'De database laat anonieme bezoekers nog niet lezen. Open in Supabase de SQL Editor en voer het blok "Toegang" onderaan <code>supabase/schema.sql</code> uit (de GRANT-regels). Daarna klik je op Opnieuw proberen.';
+      else if (/relation .* does not exist|schema cache|could not find the table/i.test(em)) hint = 'De tabellen bestaan nog niet. Voer <code>supabase/schema.sql</code> volledig uit in de SQL Editor van Supabase.';
+      else if (/failed to fetch|netwerk|network|laden/i.test(em)) hint = 'Controleer je internetverbinding en of de Project URL in config.js klopt.';
+      view.innerHTML = '<div class="empty"><p>De gegevens konden niet geladen worden.</p><p class="muted">' + esc(em) + '</p>' + (hint ? '<p>' + hint + '</p>' : '') + '<button class="btn primary" data-act="retry">Opnieuw proberen</button></div>';
       updateChrome(parts, false); return;
     }
 
