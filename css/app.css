@@ -293,6 +293,7 @@ table.t { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 
 .mrow .live { font: 700 1.1rem var(--f-head); color: var(--green-hi); min-width: 46px; text-align: right; }
 .mfields { display: grid; gap: 8px; grid-template-columns: repeat(3, 1fr); }
 .mfields label, .mmore label { font-size: .78rem; color: var(--muted); display: block; }
+.mmore .hint { display: block; font-size: .85em; opacity: .7; line-height: 1.2; }
 .mfields input, .mfields select, .mmore input { margin-top: 2px; min-height: 40px; padding: 6px 8px; text-align: center; }
 .mmore { display: grid; gap: 8px; grid-template-columns: repeat(3, 1fr); padding-top: 4px; }
 .mmore .check { grid-column: span 3; min-height: 34px; }
@@ -356,7 +357,8 @@ table.t { border-collapse: separate; border-spacing: 0; width: 100%; font-size: 
 }
 @media (min-width: 1200px) {
   .mhead-cols { display: flex; gap: 6px; padding: 0 10px 6px; color: var(--muted); font-size: .72rem; }
-  .mhead-cols span { width: 52px; text-align: center; flex: none; }
+  .mhead-cols { align-items: flex-end; }
+  .mhead-cols span { width: 52px; text-align: center; flex: none; line-height: 1.15; }
   .mhead-cols span:first-child { width: 280px; text-align: left; }
   .mrow { display: flex; align-items: center; gap: 6px; padding: 5px 10px; margin-bottom: 4px; }
   .mrow .mhead { width: 280px; flex: none; }

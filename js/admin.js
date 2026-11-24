@@ -189,7 +189,9 @@
         '<label>Man v/d match<select data-f="motm"><option value="">-</option>' + [1, 2, 3].map(function (k) { return '<option value="' + k + '"' + (l.motm === k ? ' selected' : '') + '>' + k + 'e</option>'; }).join('') + '</select></label>' +
         '<button type="button" class="moretoggle" data-act="more">Meer</button></div>' +
         '<div class="mmore"><label>Goal na corner' + inp('g_corner', val(l.g_corner)) + '</label><label>Goal vrije trap' + inp('g_free', val(l.g_free)) + '</label><label>Goal strafschop' + inp('g_pen', val(l.g_pen)) + '</label>' +
-        '<label>Eigen doelp.' + inp('own_goals', val(l.own_goals)) + '</label><label>Gemiste pen.' + inp('pen_missed', val(l.pen_missed)) + '</label><label>Gestopte pen.' + inp('pen_saved', val(l.pen_saved)) + '</label>' +
+        '<label title="Hij scoorde per ongeluk in het eigen doel">Eigen doelpunt<small class="hint">in eigen doel</small>' + inp('own_goals', val(l.own_goals)) + '</label>' +
+        '<label title="Hij nam een strafschop en scoorde niet">Penalty gemist<small class="hint">hij miste zelf</small>' + inp('pen_missed', val(l.pen_missed)) + '</label>' +
+        '<label title="De keeper stopte een strafschop van de tegenstander">Penalty gestopt<small class="hint">door de keeper</small>' + inp('pen_saved', val(l.pen_saved)) + '</label>' +
         '<label class="check"><input type="checkbox" data-f="suspended"' + (l.suspended ? ' checked' : '') + '> Geschorst</label></div></div>';
     }
     function staffRow(r) {
@@ -212,7 +214,7 @@
       '<p class="legend-note" id="comp-note" style="margin:10px 0 0" hidden>Beker en oefenwedstrijden tellen standaard niet mee in de statistieken. Je kan dat aanpassen bij Puntentelling.</p></div>' +
       KFC.quickui.panelHtml() +
       '<div class="checkline" id="checks" role="status" aria-live="polite"></div>' +
-      '<div class="panel"><h3>Spelers</h3><div class="mhead-cols" aria-hidden="true"><span>Speler</span><span>Min.</span><span>Goals</span><span>Assists</span><span>Geel</span><span>Rood</span><span>MvdM</span><span>Corner</span><span>Vrije trap</span><span>Pen.</span><span>Eigen</span><span>Gemist</span><span>Gestopt</span><span>Geschorst</span></div>' +
+      '<div class="panel"><h3>Spelers</h3><div class="mhead-cols" aria-hidden="true"><span>Speler</span><span>Min.</span><span>Goals</span><span>Assists</span><span>Geel</span><span>Rood</span><span>MvdM</span><span title="Goal na een corner">Goal corner</span><span title="Goal uit een vrije trap">Goal vrije trap</span><span title="Goal uit een strafschop">Goal penalty</span><span title="Doelpunt in het eigen doel">Eigen doelpunt</span><span title="Hij nam een penalty en miste">Penalty gemist</span><span title="De keeper stopte een penalty">Penalty gestopt</span><span>Geschorst</span></div>' +
       (players.length ? players.map(playerRow).join('') : '<p class="muted">Er zijn nog geen spelers in dit seizoen. <a href="#/beheer/spelers">Spelers toevoegen</a></p>') + '</div>' +
       (S.staff.length ? '<details class="panel"' + (S.staff.some(function (r) { return lineOf[r.roster.id]; }) ? ' open' : '') + '><summary style="cursor:pointer;font-weight:600">Staf (kaarten en schorsingen)</summary><div style="margin-top:10px">' + S.staff.map(staffRow).join('') + '</div></details>' : '') +
       '<details class="panel"><summary style="cursor:pointer;font-weight:600">Teamcijfers (hoekschoppen, vrije trappen, tegendoelpunten)</summary><div style="margin-top:12px"><p class="muted">Hoe viel ons doelpunt of hoe kregen we er een tegen? Dit gebruiken we voor de analyse.</p>' +
