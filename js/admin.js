@@ -22,6 +22,27 @@
     return { html: '<div class="empty"><p>Je moet ingelogd zijn om te kunnen wijzigen.</p><a class="btn primary" href="#/login">Inloggen</a></div>' };
   }
 
+  /* ================= Back-up herinnering ================= */
+  var BK_KEY = 'kfc.lastBackup', BK_DAYS = 30;
+  function lastBackup() { try { var v = localStorage.getItem(BK_KEY); return v ? new Date(v) : null; } catch (e) { return null; } }
+  function markBackup() { try { localStorage.setItem(BK_KEY, new Date().toISOString()); } catch (e) {} }
+  function backupAge() {
+    var d = lastBackup(); if (!d || isNaN(d)) return null;
+    return Math.max(0, Math.floor((Date.now() - d.getTime()) / 86400000));
+  }
+  function ageText(days) {
+    if (days === null) return 'nog geen back-up gemaakt op dit toestel';
+    if (days === 0) return 'vandaag';
+    if (days === 1) return 'gisteren';
+    if (days < 14) return days + ' dagen geleden';
+    return Math.round(days / 7) + ' weken geleden';
+  }
+  function backupBanner(noLink) {
+    var days = backupAge(), late = days === null || days >= BK_DAYS;
+    return '<div class="banner' + (late ? '' : ' ok') + '">Laatste back-up: <b>' + ageText(days) + '</b>. ' +
+      (late ? 'Het is tijd voor een nieuwe. ' : '') + (noLink ? '' : '<a href="#/beheer/backup">' + (late ? 'Nu back-up maken' : 'Naar back-up') + '</a>') + '</div>';
+  }
+
   /* ================= Menu ================= */
   function menu(c) {
     var S = c.S, missing = S.team.playedMatches.filter(function (m) { return !S.hasLines[m.id]; }).length;
@@ -35,7 +56,7 @@
     ];
     var info = Store.mode === 'local'
       ? '<div class="banner">Je werkt in de lokale versie. Wat je invoert blijft in deze browser staan. Maak daarom af en toe een <a href="#/beheer/backup">back-up</a>.</div>'
-      : '<div class="banner ok">Ingelogd als ' + esc(Store.user && Store.user.email || '') + '. Wijzigingen zijn meteen voor iedereen zichtbaar.</div>';
+      : '<div class="banner ok">Ingelogd als ' + esc(Store.user && Store.user.email || '') + '. Wijzigingen zijn meteen voor iedereen zichtbaar.</div>' + backupBanner();
     return { html: '<div class="page-head"><div><h1>Beheer</h1><p>Seizoen ' + esc(S.season.name) + '.</p></div></div>' + info +
       '<div class="menu-grid">' + items.map(function (i) { return '<a href="' + i[0] + '">' + U.icon(i[1]) + '<div><b>' + i[2] + '</b><span>' + esc(i[3]) + '</span></div></a>'; }).join('') + '</div>' };
   }
@@ -407,7 +428,7 @@
   function backupPage(c) {
     var d = c.data, online = Store.mode === 'supabase';
     var html = crumbs([['Back-up']]) + '<div class="page-head"><div><h1>Back-up en online zetten</h1><p>Bewaar een kopie van alle gegevens in één bestand.</p></div></div>' +
-      '<div class="panel"><h3>Back-up maken</h3><p class="muted">Bevat ' + d.seasons.length + ' seizoenen, ' + d.matches.length + ' wedstrijden en ' + d.lines.length + ' spelersregels.</p><button class="btn primary" data-act="export">Back-up downloaden</button></div>' +
+      backupBanner(true) + '<div class="panel"><h3>Back-up maken</h3><p class="muted">Bevat ' + d.seasons.length + ' seizoenen, ' + d.matches.length + ' wedstrijden en ' + d.lines.length + ' spelersregels.</p><button class="btn primary" data-act="export">Back-up downloaden</button></div>' +
       '<div class="panel"><h3>Back-up terugzetten</h3><p class="muted">' + (online ? 'Gegevens uit het bestand worden toegevoegd of overschreven in de online database. Niets wordt gewist.' : 'Alle huidige gegevens in deze browser worden vervangen door de gegevens uit het bestand.') + '</p><input type="file" id="import-file" accept=".json,application/json"></div>';
     if (online) {
       html += '<div class="panel"><h3>Startdata uploaden</h3><p class="muted">Zet het seizoen 2025-2026 uit de oude spreadsheet en de selectie en kalender van 2026-2027 in de online database. Doe dit één keer, bij de eerste installatie.</p><button class="btn" data-act="seed">Startdata uploaden</button></div>';
@@ -417,7 +438,7 @@
     }
     function bind(el) {
       q(el, '[data-act="export"]').addEventListener('click', function () {
-        U.download('kfc-marke-backup-' + U.today() + '.json', JSON.stringify(Store.exportData(), null, 1)); U.toast('Back-up gedownload');
+        U.download('kfc-marke-backup-' + U.today() + '.json', JSON.stringify(Store.exportData(), null, 1)); markBackup(); U.toast('Back-up gedownload'); KFC.app.render();
       });
       q(el, '#import-file').addEventListener('change', function (e) {
         var file = e.target.files[0]; if (!file) return;
