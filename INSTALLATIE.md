@@ -38,12 +38,14 @@ window.KFC_CONFIG = {
 Gebruik nooit de **secret** of **service_role** key. De publishable key mag publiek staan: de database laat anonieme bezoekers enkel lezen.
 
 ### Stap 4: online zetten
-Kies één van de drie:
-- **Netlify**: ga naar app.netlify.com/drop en sleep de hele map `kfc-marke` in het venster.
-- **Cloudflare Pages**: maak een project met **Direct Upload** en upload de map.
-- **GitHub Pages**: zet de map in een repository en zet Pages aan.
+Zo werkt het nu voor KFC Marke, met **GitHub Pages**:
+1. Maak op github.com een repository (publiek) en zet de inhoud van de map `kfc-marke` erin. Het bestand `.nojekyll` moet meekomen.
+2. Ga in de repository naar **Settings, Pages**. Kies bij **Source** de branch `main` en de map `/ (root)`.
+3. Na ongeveer een minuut staat de site op `https://<gebruikersnaam>.github.io/<repository>/`.
 
-Je krijgt een webadres. **Dat adres is de kijkversie.** Stuur het door aan wie je wil.
+Netlify en Cloudflare Pages kunnen ook: koppel daar dezelfde repository, of sleep de map in het venster (Netlify Drop).
+
+Je krijgt een webadres. **Dat adres is de kijkversie.** Stuur het door aan wie je wil. Wie het adres heeft kan alles bekijken, maar niets wijzigen: schrijven kan enkel de ingelogde beheerder.
 
 ### Stap 5: eerste keer vullen
 1. Open je webadres, klik onderaan op **Beheerder? Inloggen** en log in.
@@ -55,6 +57,12 @@ Je krijgt een webadres. **Dat adres is de kijkversie.** Stuur het door aan wie j
 - Jij logt in via de link onderaan. Daarna verschijnt **Beheer** in het menu en kan je alles invoeren, ook vanop je smartphone.
 - Wijzigingen zijn meteen zichtbaar voor iedereen die de pagina opent of ververst.
 - Een gratis Supabase-project kan na een week zonder bezoek in slaap vallen. Je heractiveert het met één klik in het Supabase-dashboard.
+
+### Aanpassingen en back-ups
+- Een wijziging aan de app zet je online door de bestanden in de repository te vervangen. Je gegevens blijven in Supabase staan, dus een nieuwe versie van de app wist niets.
+- Maak toch af en toe een back-up (Beheer, Back-up). De beheerpagina toont wanneer de laatste back-up was en kleurt geel na 30 dagen.
+- Wijzigt de databasestructuur, dan staat het SQL-blokje in `supabase/migraties/`. Voer dat eenmalig uit in de SQL Editor.
+- Zie je "permission denied" bij het openen van de site? Voer dan de GRANT-regels uit `supabase/schema.sql` uit.
 
 ## Snel invullen en de RBFA-knop
 - In elk wedstrijdformulier staat **Snel invullen**: typ wat er gebeurde ("Jelle scoort na een corner van Jarne. Geel voor Arne. Man van de match: Jarne, Robbe, Emile.") en klik op Toepassen. Onder het vak staat een lijstje met wat de app begrijpt.
