@@ -118,6 +118,61 @@ expect('2026: staf', S26.staff.length, 6);
 }
 function J2(x) { return JSON.stringify(x); }
 
+/* Seizoen 2024-2025: totalen uit de oude sheet (minuten, in selectie, doelpunten, geel, rood) */
+{
+  const T24 = {
+  'Robbe Pattijne': [90, 15, 0, 1, 0],
+  'Aaron De Veirman': [1874, 25, 2, 3, 0],
+  'Noé Rogard': [734, 22, 2, 5, 1],
+  'Henri Deprez': [396, 10, 0, 3, 0],
+  'Joran De Rudder': [64, 4, 0, 1, 0],
+  'Lander Denduyver': [2256, 27, 1, 3, 1],
+  'Siegurd Defoirdt': [1579, 26, 11, 2, 1],
+  'Arne Naessens': [1639, 23, 2, 3, 0],
+  'Jordy Balcaen': [1017, 27, 2, 1, 0],
+  'Thomas Menghis': [1784, 23, 4, 4, 0],
+  'Thijs De Leeuw': [77, 4, 0, 1, 0],
+  'Hamza El Arini': [314, 6, 0, 1, 0],
+  'Gerben Neirijnck': [892, 14, 0, 2, 0],
+  'Hannes Tieberghien': [1480, 20, 1, 1, 0],
+  'Matthias Cottenier': [1119, 23, 1, 2, 0],
+  'Lucas Coornaert': [939, 18, 1, 1, 1],
+  'Benjamin Bonte': [1844, 24, 2, 1, 0],
+  'Emile Vanluchene': [1846, 23, 1, 3, 1],
+  'Damien Kontogom': [1773, 23, 9, 6, 0],
+  'Enver De Weirdt': [177, 9, 0, 1, 1],
+  'Lucas Vantieghem': [2151, 28, 2, 2, 0],
+  'Bob Hochepied': [0, 0, 0, 0, 0],
+  'Gilles Herreman': [0, 0, 0, 0, 0],
+  'Jannis Bourgeois': [2063, 27, 0, 6, 0],
+  'Jonas Beernaert': [1, 1, 0, 3, 0],
+  'Anthony Degrendel': [2520, 28, 0, 0, 0],
+  'Davy Vercruysse': [0, 0, 0, 1, 0],
+  'Thibeau Herreman': [0, 0, 0, 1, 0],
+  'Robbe Libbrecht': [0, 0, 0, 0, 0],
+  'Jens Cattrel': [0, 0, 0, 0, 0],
+  'Viktor Forrez': [0, 0, 0, 0, 0],
+  };
+  const S24 = engine.computeSeason('s2024', seed);
+  const all24 = S24.players.concat(S24.staff), by24 = {}; all24.forEach(r => { by24[r.name] = r; });
+  let n24 = 0;
+  Object.keys(T24).forEach(k => {
+    const r = by24[k], w = T24[k];
+    if (!r) { bad++; console.log('  VERSCHIL 2024 speler ontbreekt', k); return; }
+    const inSel = seed.lines.filter(l => l.roster_id === r.roster.id && l.minutes != null).length;
+    const got = [r.stats.minutes, inSel, r.stats.goals, r.stats.yellow, r.stats.red].join();
+    if (got !== w.join()) { bad++; console.log('  VERSCHIL 2024', k, 'gekregen', got, 'verwacht', w.join()); }
+    n24++;
+  });
+  expect('2024-25: aantal spelers en staf gecontroleerd', n24, 31);
+  expect('2024-25: gespeeld', S24.team.played, 30);
+  expect('2024-25: W-G-V', S24.team.W + '-' + S24.team.G + '-' + S24.team.V, '11-12-7');
+  expect('2024-25: doelsaldo', S24.team.gf + '-' + S24.team.ga, '41-37');
+  expect('2024-25: doelpunten van de spelers = doelpunten van het team', S24.players.reduce((a, r) => a + r.stats.goals, 0), S24.team.gf);
+  expect('2024-25: punten (11 zeges, 12 gelijke spelen)', S24.team.points, 45);
+  console.log('2024-25: 31 spelers en staf gecontroleerd tegen de sheet; W-G-V ' + S24.team.W + '-' + S24.team.G + '-' + S24.team.V + ', doelsaldo ' + S24.team.gf + '-' + S24.team.ga + ', punten ' + S24.team.points);
+}
+
 console.log(bad === 0 ? 'ALLES KLOPT: de rekenmotor geeft dezelfde totalen als de oude sheet.' : bad + ' verschil(len) gevonden.');
 console.log('2025-26 wedstrijden:', T.played, 'W-G-V', T.W + '-' + T.G + '-' + T.V, 'doelsaldo', T.gf + '-' + T.ga);
 console.log('2026-27 stand na 13 wedstrijden: W-G-V', S26.team.W + '-' + S26.team.G + '-' + S26.team.V, 'doelsaldo', S26.team.gf + '-' + S26.team.ga, 'punten', S26.team.points);

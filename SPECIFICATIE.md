@@ -50,6 +50,7 @@ Beheerder: Selectie (nummer, naam, positie, toevoegen, verwijderen), Wedstrijden
 Tabellen: `seasons`, `people`, `roster`, `matches`, `lines`. Zie `supabase/schema.sql`. Lokaal staat dezelfde structuur in de browser (localStorage). Online: Supabase met lezen voor iedereen en schrijven enkel voor de ingelogde gebruiker.
 
 ## Startdata
+- 2024-2025: 26 spelers, 5 staf en de 30 competitiewedstrijden uit de sheet "KFC MARKE 2024-2025". Enkel minuten, doelpunten en kaarten waren bijgehouden. Het seizoen heeft de regel `basic`: de app toont dan geen assists, fantasy, man van de match, soorten doelpunten of teamcijfers voor dit seizoen. Uitslagen komen van voetbalexpress.be/RBFA, want de sheet had ze niet. Wedstrijd 30 (27/04/2025, Sparta Heestert thuis) heeft geen spelersgegevens en staat op de officiële uitslag 0-3 (waarschijnlijk forfait). Spelers die nog bij de club zijn (zoals Lucas Vantieghem, geschreven als Lukas in de oude sheet) zijn dezelfde persoon als in de latere seizoenen.
 - 2025-2026: 22 spelers, 5 staf, 30 competitiewedstrijden met alle spelersgegevens.
 - 2026-2027: 25 spelers (15 terugkerend met posities uit vorig jaar, 10 nieuw), 5 staf en de 30 competitiewedstrijden uit de RBFA-kalender. De 13 al gespeelde wedstrijden hebben de uitslag; spelersgegevens moeten nog ingevuld worden. Bekers en oefenwedstrijden staan er niet in.
 

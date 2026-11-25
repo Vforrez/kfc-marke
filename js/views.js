@@ -45,6 +45,9 @@
       '<p class="muted cmp-note">' + (lim ? 'Van elk seizoen tellen enkel de eerste ' + lim + ' gespeelde wedstrijden. Zo vergelijk je het lopende seizoen eerlijk met een volledig seizoen. Handmatige correcties tellen hier niet mee.' : 'Elk seizoen telt volledig mee, ook als het nog bezig is.') + '</p>';
   }
   function pts(n) { n = Number(n) || 0; return '<span class="' + (n > 0 ? 'pts-pos' : n < 0 ? 'pts-neg' : 'zero') + '">' + (n > 0 ? '+' + n : n) + '</span>'; }
+  /* seizoenen met enkel de basis (geen assists, fantasy, man van de match, soorten doelpunten) */
+  function isBasic(c) { return !!(c.S && c.S.rules && c.S.rules.basic); }
+  function basicNote(c) { return '<div class="banner" style="margin-top:12px">In seizoen ' + esc(c.S.season.name) + ' werden enkel wedstrijden, minuten, doelpunten en kaarten bijgehouden. Assists, fantasypunten en man van de match bestaan voor dit seizoen niet.</div>'; }
   function hasStats(c) { return c.S.players.some(function (p) { return p.stats.apps > 0; }); }
   function emptyStats(c) {
     return '<div class="empty"><p>Voor dit seizoen zijn er nog geen spelersgegevens ingevoerd.</p>' +
@@ -127,7 +130,11 @@
     }
 
     html += '<div class="sec"><div class="cols c3">';
-    if (hasStats(c)) {
+    if (hasStats(c) && isBasic(c)) {
+      html += '<div><div class="sec-head"><h2>Doelpunten</h2><a class="more" href="#/spelers">Alles</a></div>' + rankList(S.players, function (r) { return r.stats.goals; }) + '</div>' +
+        '<div><div class="sec-head"><h2>Wedstrijden</h2><a class="more" href="#/spelers">Alles</a></div>' + rankList(S.players, function (r) { return r.stats.apps; }) + '</div>' +
+        '<div><div class="sec-head"><h2>Minuten</h2><a class="more" href="#/spelers">Alles</a></div>' + rankList(S.players, function (r) { return r.stats.minutes; }) + '</div>';
+    } else if (hasStats(c)) {
       html += '<div><div class="sec-head"><h2>Fantasy</h2><a class="more" href="#/fantasy">Alles</a></div>' + rankList(S.players, function (r) { return r.fantasy.total; }, 'pt') + '</div>' +
         '<div><div class="sec-head"><h2>Doelpunten</h2><a class="more" href="#/spelers">Alles</a></div>' + rankList(S.players, function (r) { return r.stats.goals; }) + '</div>' +
         '<div><div class="sec-head"><h2>Assists</h2><a class="more" href="#/spelers">Alles</a></div>' + rankList(S.players, function (r) { return r.stats.assists; }) + '</div>';
@@ -151,6 +158,7 @@
   V.fantasy = function (c) {
     var S = c.S, sort = ui.fantasySort;
     var html = '<div class="page-head"><div><h1>Fantasy</h1><p>Klassement seizoen ' + esc(S.season.name) + '. Klik op een kolom om te sorteren.</p></div></div>';
+    if (isBasic(c)) return html + '<div class="empty"><p>In seizoen ' + esc(S.season.name) + ' werd er geen fantasy bijgehouden.</p><a class="btn" href="#/spelers">Naar de selectie</a></div>';
     if (!hasStats(c)) return html + emptyStats(c);
     var posOpts = [['alle', 'Iedereen']].concat(E.POSITIONS.map(function (p) { return [p, E.POS_LABEL[p] + 's']; })).concat([['geen', 'Zonder positie']]);
     html += '<div class="tools"><div class="seg" role="group" aria-label="Positie">' + posOpts.map(function (o) {
@@ -196,7 +204,8 @@
       '<div class="seg" role="group" aria-label="Weergave"><button type="button" data-set="playersView=kaarten" aria-pressed="' + (ui.playersView === 'kaarten') + '">Kaarten</button>' +
       '<button type="button" data-set="playersView=tabel" aria-pressed="' + (ui.playersView === 'tabel') + '">Tabel</button></div></div>';
     if (!S.players.length) return html + '<div class="empty"><p>Nog geen spelers in dit seizoen.</p>' + (c.canEdit ? '<a class="btn primary" href="#/beheer/spelers">Spelers toevoegen</a>' : '') + '</div>';
-    var any = hasStats(c);
+    var any = hasStats(c), B = isBasic(c);
+    if (B) html += basicNote(c);
 
     if (ui.playersView === 'tabel') {
       var sort = ui.playersSort;
@@ -206,17 +215,17 @@
         cs: function (r) { return r.stats.cleanSheets; }, conceded: function (r) { return r.stats.conceded; }, yellow: function (r) { return r.stats.yellow; }, red: function (r) { return r.stats.red; },
         motm: function (r) { return r.stats.motm1 * 100 + r.stats.motm2 * 10 + r.stats.motm3; }, fantasy: function (r) { return r.fantasy.total; }
       };
-      var rows = sortRows(S.players, g[sort.key] || g.goals, sort.dir);
+      var rows = sortRows(S.players, (B && (sort.key === 'assists' || sort.key === 'fantasy' || sort.key === 'motm') ? g.goals : g[sort.key]) || g.goals, sort.dir);
       html += '<div class="table-wrap"><table class="t"><thead><tr>' + th('Speler', 'name', sort, 'players', { cls: 'l sticky' }) + th('Nr', 'nr', sort, 'players', { cls: 'hide-sm' }) + th('Pos.', 'pos', sort, 'players') +
-        th('Wed.', 'apps', sort, 'players', { title: 'Wedstrijden in de selectie die minuten speelden' }) + th('Minuten', 'minutes', sort, 'players') + th('Goals', 'goals', sort, 'players') + th('Assists', 'assists', sort, 'players') +
+        th('Wed.', 'apps', sort, 'players', { title: 'Wedstrijden in de selectie die minuten speelden' }) + th('Minuten', 'minutes', sort, 'players') + th('Goals', 'goals', sort, 'players') + (B ? '' : th('Assists', 'assists', sort, 'players')) +
         th('Clean sheets', 'cs', sort, 'players', { title: 'Meer dan 60 minuten gespeeld zonder tegendoelpunt' }) + th('Tegendoelp.', 'conceded', sort, 'players', { title: 'Tegendoelpunten tijdens wedstrijden waarin hij meer dan 60 minuten speelde' }) +
-        th('Geel', 'yellow', sort, 'players') + th('Rood', 'red', sort, 'players') + th('Man v/d match', 'motm', sort, 'players', { title: 'Aantal keer 1e, 2e of 3e' }) + th('Fantasy', 'fantasy', sort, 'players') + '</tr></thead><tbody>';
+        th('Geel', 'yellow', sort, 'players') + th('Rood', 'red', sort, 'players') + (B ? '' : th('Man v/d match', 'motm', sort, 'players', { title: 'Aantal keer 1e, 2e of 3e' }) + th('Fantasy', 'fantasy', sort, 'players')) + '</tr></thead><tbody>';
       rows.forEach(function (r) {
         var s = r.stats;
         html += '<tr><td class="l sticky"><a href="' + personHref(r) + '">' + esc(r.name) + '</a></td><td class="nr hide-sm">' + esc(r.roster.number || '') + '</td><td>' + U.posBadge(r.roster.position) + '</td>' +
-          '<td class="num">' + U.dash(s.apps) + '</td><td class="num">' + U.dash(s.minutes) + '</td><td class="num">' + U.dash(s.goals) + '</td><td class="num">' + U.dash(s.assists) + '</td><td class="num">' + U.dash(s.cleanSheets) + '</td>' +
+          '<td class="num">' + U.dash(s.apps) + '</td><td class="num">' + U.dash(s.minutes) + '</td><td class="num">' + U.dash(s.goals) + '</td>' + (B ? '' : '<td class="num">' + U.dash(s.assists) + '</td>') + '<td class="num">' + U.dash(s.cleanSheets) + '</td>' +
           '<td class="num">' + (s.apps ? s.conceded : '<span class="zero">0</span>') + '</td><td class="num">' + U.dash(s.yellow) + '</td><td class="num">' + U.dash(s.red) + '</td>' +
-          '<td class="num">' + (s.motm ? s.motm1 + '/' + s.motm2 + '/' + s.motm3 : '<span class="zero">0</span>') + '</td><td class="total num">' + r.fantasy.total + '</td></tr>';
+          (B ? '' : '<td class="num">' + (s.motm ? s.motm1 + '/' + s.motm2 + '/' + s.motm3 : '<span class="zero">0</span>') + '</td><td class="total num">' + r.fantasy.total + '</td>') + '</tr>';
       });
       html += '</tbody></table></div>';
     } else {
@@ -228,8 +237,8 @@
         html += '<div class="grp"><h2>' + esc(gr.label) + ' <small>' + rows.length + '</small></h2><div class="pgrid">' + rows.map(function (r) {
           var s = r.stats;
           return '<a class="pcard" href="' + personHref(r) + '"><div class="jersey' + (r.roster.number ? '' : ' empty-n') + '">' + esc(r.roster.number || '-') + '</div><div><div class="nm">' + esc(r.name) + '</div>' +
-            '<div class="meta">' + (any ? '<span><b>' + s.apps + '</b> wed.</span><span><b>' + s.goals + '</b> goals</span><span><b>' + s.assists + '</b> assists</span>' : '<span>Nog geen wedstrijden</span>') + '</div></div>' +
-            (any ? '<div class="pts" title="Fantasypunten">' + r.fantasy.total + '</div>' : '') + '</a>';
+            '<div class="meta">' + (any ? '<span><b>' + s.apps + '</b> wed.</span><span><b>' + s.goals + '</b> goals</span>' + (B ? '<span><b>' + U.int(s.minutes) + '</b> min.</span>' : '<span><b>' + s.assists + '</b> assists</span>') : '<span>Nog geen wedstrijden</span>') + '</div></div>' +
+            (any && !B ? '<div class="pts" title="Fantasypunten">' + r.fantasy.total + '</div>' : '') + '</a>';
         }).join('') + '</div></div>';
       });
     }
@@ -270,17 +279,17 @@
       html += '<div class="sec"><dl class="kv"><div><dt>Gele kaarten</dt><dd>' + s.yellow + '</dd></div><div><dt>Rode kaarten</dt><dd>' + s.red + '</dd></div><div><dt>Schorsingen uitgezeten</dt><dd>' + s.suspended + '</dd></div></dl></div>';
       return html;
     }
-    var gk = rs.position === 'keeper' || rs.position === 'verdediger';
+    var gk = rs.position === 'keeper' || rs.position === 'verdediger', B = !!S.rules.basic;
     html += '<div class="sec"><dl class="kv"><div><dt>Wedstrijden</dt><dd>' + s.apps + '</dd></div><div><dt>Minuten</dt><dd>' + U.int(s.minutes) + '</dd></div><div><dt>Goals</dt><dd>' + s.goals + '</dd></div>' +
-      '<div><dt>Assists</dt><dd>' + s.assists + '</dd></div>' + (gk ? '<div><dt>Clean sheets</dt><dd>' + s.cleanSheets + '</dd></div>' : '') +
-      '<div><dt>Gele kaarten</dt><dd>' + s.yellow + '</dd></div><div><dt>Rode kaarten</dt><dd>' + s.red + '</dd></div><div><dt>Man van de match</dt><dd>' + s.motm + '</dd></div>' +
-      '<div><dt>Fantasypunten</dt><dd style="color:var(--green-hi)">' + f.total + '</dd></div></dl></div>';
+      (B ? '' : '<div><dt>Assists</dt><dd>' + s.assists + '</dd></div>') + (gk ? '<div><dt>Clean sheets</dt><dd>' + s.cleanSheets + '</dd></div>' : '') +
+      '<div><dt>Gele kaarten</dt><dd>' + s.yellow + '</dd></div><div><dt>Rode kaarten</dt><dd>' + s.red + '</dd></div>' + (B ? '' : '<div><dt>Man van de match</dt><dd>' + s.motm + '</dd></div>' +
+      '<div><dt>Fantasypunten</dt><dd style="color:var(--green-hi)">' + f.total + '</dd></div>') + '</dl></div>';
 
     /* puntenverdeling */
     var parts = CAT.map(function (k) { return { label: k[1], color: k[2], v: k[0] === 'specials' ? f.specials + f.adjust : f[k[0]] }; });
     var neg = f.goalsAgainst + f.yellow + f.red;
     var posSum = parts.reduce(function (a, p) { return a + Math.max(0, p.v); }, 0);
-    if (posSum > 0) {
+    if (posSum > 0 && !B) {
       html += '<div class="sec"><h2>Fantasypunten</h2><div class="stack" role="img" aria-label="Verdeling van de punten">' + parts.filter(function (p) { return p.v > 0; }).map(function (p) {
         return '<i style="width:' + (p.v / posSum * 100) + '%;background:' + p.color + '" title="' + esc(p.label + ': ' + p.v) + '"></i>';
       }).join('') + '</div><div class="legend">' + parts.filter(function (p) { return p.v !== 0; }).map(function (p) {
@@ -291,37 +300,37 @@
 
     /* per wedstrijd */
     if (row.perMatch.length) {
-      html += '<div class="sec"><h2>Wedstrijd per wedstrijd</h2><div class="table-wrap" style="margin-top:12px"><table class="t"><thead><tr><th class="l sticky">Tegenstander</th><th>Uitslag</th><th>Min.</th><th>Goals</th><th>Assists</th><th>Geel</th><th>Rood</th><th>MvdM</th><th>Punten</th></tr></thead><tbody>';
+      html += '<div class="sec"><h2>Wedstrijd per wedstrijd</h2><div class="table-wrap" style="margin-top:12px"><table class="t"><thead><tr><th class="l sticky">Tegenstander</th><th>Uitslag</th><th>Min.</th><th>Goals</th>' + (B ? '' : '<th>Assists</th>') + '<th>Geel</th><th>Rood</th>' + (B ? '' : '<th>MvdM</th><th>Punten</th>') + '</tr></thead><tbody>';
       row.perMatch.forEach(function (pm) {
         var l = pm.line, m = pm.match, g = E.lineGoals(l);
         if (pm.b) {
-          html += '<tr><td class="l sticky">B-ploeg <span class="muted">' + esc(U.dateShort(m.date)) + (m.opponent && m.opponent !== 'B-ploeg' ? ', ' + esc(m.opponent) : '') + '</span></td><td><span class="muted">kaarten enkel</span></td><td class="num"><span class="zero">-</span></td><td class="num"><span class="zero">-</span></td><td class="num"><span class="zero">-</span></td>' +
-            '<td class="num">' + (l.yellow ? '<span class="card-y"></span>' + l.yellow : '<span class="zero">0</span>') + '</td><td class="num">' + (l.red ? '<span class="card-r"></span>' + l.red : '<span class="zero">0</span>') + '</td><td class="num"><span class="zero">-</span></td><td class="num total"></td></tr>';
+          html += '<tr><td class="l sticky">B-ploeg <span class="muted">' + esc(U.dateShort(m.date)) + (m.opponent && m.opponent !== 'B-ploeg' ? ', ' + esc(m.opponent) : '') + '</span></td><td><span class="muted">kaarten enkel</span></td><td class="num"><span class="zero">-</span></td><td class="num"><span class="zero">-</span></td>' + (B ? '' : '<td class="num"><span class="zero">-</span></td>') +
+            '<td class="num">' + (l.yellow ? '<span class="card-y"></span>' + l.yellow : '<span class="zero">0</span>') + '</td><td class="num">' + (l.red ? '<span class="card-r"></span>' + l.red : '<span class="zero">0</span>') + '</td>' + (B ? '' : '<td class="num"><span class="zero">-</span></td><td class="num total"></td>') + '</tr>';
           return;
         }
         var tip = pm.pts ? 'Minuten ' + pm.pts.minutes + ', goals ' + pm.pts.goals + ', assists ' + pm.pts.assists + ', clean sheet ' + pm.pts.cleanSheet + ', tegendoelpunten ' + pm.pts.goalsAgainst + ', kaarten ' + (pm.pts.yellow + pm.pts.red) + ', man van de match ' + pm.pts.motm + ', bijzonder ' + pm.pts.specials : '';
         html += '<tr><td class="l sticky"><a href="#/wedstrijd/' + esc(m.id) + '">' + esc(m.opponent) + '</a> <span class="muted">' + (m.home ? 'T' : 'U') + '</span></td><td>' + U.resultChip(m) + ' <span class="num">' + esc(U.score(m)) + '</span></td>' +
-          '<td class="num">' + (l.minutes == null ? '<span class="zero">-</span>' : (l.minutes === 0 ? 'bank' : l.minutes)) + '</td><td class="num">' + U.dash(g) + '</td><td class="num">' + U.dash(E.num(l.assists)) + '</td>' +
+          '<td class="num">' + (l.minutes == null ? '<span class="zero">-</span>' : (l.minutes === 0 ? 'bank' : l.minutes)) + '</td><td class="num">' + U.dash(g) + '</td>' + (B ? '' : '<td class="num">' + U.dash(E.num(l.assists)) + '</td>') +
           '<td class="num">' + (l.yellow ? '<span class="card-y"></span>' + l.yellow : '<span class="zero">0</span>') + '</td><td class="num">' + (l.red ? '<span class="card-r"></span>' + l.red : '<span class="zero">0</span>') + '</td>' +
-          '<td class="num">' + (l.motm ? l.motm : '<span class="zero">-</span>') + '</td><td class="num total" title="' + esc(tip) + '">' + (pm.pts ? pm.pts.total : '') + '</td></tr>';
+          (B ? '' : '<td class="num">' + (l.motm ? l.motm : '<span class="zero">-</span>') + '</td><td class="num total" title="' + esc(tip) + '">' + (pm.pts ? pm.pts.total : '') + '</td>') + '</tr>';
       });
       html += '</tbody></table></div></div>';
     }
 
     /* loopbaan */
     if (seasons.length > 1 || true) {
-      var tot = { apps: 0, minutes: 0, goals: 0, assists: 0, yellow: 0, red: 0, fantasy: 0 };
+      var tot = { apps: 0, minutes: 0, goals: 0, assists: 0, yellow: 0, red: 0, fantasy: 0, fApps: 0 }, anyBasic = false;
       var body = seasons.map(function (sx) {
         var SS = c.compute(sx.id, cmpLimit(c)), rr = SS.players.concat(SS.staff).filter(function (r) { return r.person.id === personId; })[0];
         if (!rr) return '';
-        var q = rr.stats; tot.apps += q.apps; tot.minutes += q.minutes; tot.goals += q.goals; tot.assists += q.assists; tot.yellow += q.yellow; tot.red += q.red; tot.fantasy += rr.fantasy.total;
+        var q = rr.stats, bs = !!SS.rules.basic; if (bs) anyBasic = true; tot.apps += q.apps; tot.minutes += q.minutes; tot.goals += q.goals; tot.yellow += q.yellow; tot.red += q.red; if (!bs) { tot.assists += q.assists; tot.fantasy += rr.fantasy.total; tot.fApps += q.apps; }
         return '<tr><td class="l sticky"><a href="#/speler/' + encodeURIComponent(personId) + '" data-season="' + esc(sx.id) + '">' + esc(sx.name) + '</a></td><td>' + (rr.isStaff ? '' : U.posBadge(rr.roster.position)) + '</td><td class="nr">' + esc(rr.roster.number || '') + '</td>' +
-          '<td class="num">' + q.apps + '</td><td class="num">' + U.int(q.minutes) + '</td><td class="num">' + q.goals + '</td><td class="num">' + q.assists + '</td><td class="num">' + q.yellow + '</td><td class="num">' + q.red + '</td>' +
-          '<td class="num total">' + (rr.isStaff ? '' : rr.fantasy.total) + '</td><td class="num">' + (rr.isStaff || !q.apps ? '' : U.dec(rr.fantasy.total / q.apps)) + '</td></tr>';
+          '<td class="num">' + q.apps + '</td><td class="num">' + U.int(q.minutes) + '</td><td class="num">' + q.goals + '</td><td class="num">' + (bs ? '<span class="zero">-</span>' : q.assists) + '</td><td class="num">' + q.yellow + '</td><td class="num">' + q.red + '</td>' +
+          '<td class="num total">' + (rr.isStaff ? '' : bs ? '<span class="zero">-</span>' : rr.fantasy.total) + '</td><td class="num">' + (rr.isStaff || bs || !q.apps ? '' : U.dec(rr.fantasy.total / q.apps)) + '</td></tr>';
       }).join('');
       html += '<div class="sec"><h2>Seizoenen vergelijken</h2>' + (seasons.length > 1 ? compareControl(c) : '') + '<div class="table-wrap" style="margin-top:12px"><table class="t"><thead><tr><th class="l sticky">Seizoen</th><th>Pos.</th><th>Nr</th><th>Wed.</th><th>Minuten</th><th>Goals</th><th>Assists</th><th>Geel</th><th>Rood</th><th>Fantasy</th><th>Per wed.</th></tr></thead><tbody>' + body + '</tbody>' +
-        (seasons.length > 1 ? '<tfoot><tr><td class="l sticky">Totaal</td><td></td><td></td><td class="num">' + tot.apps + '</td><td class="num">' + U.int(tot.minutes) + '</td><td class="num">' + tot.goals + '</td><td class="num">' + tot.assists + '</td><td class="num">' + tot.yellow + '</td><td class="num">' + tot.red + '</td><td class="num">' + tot.fantasy + '</td><td class="num">' + (tot.apps ? U.dec(tot.fantasy / tot.apps) : '') + '</td></tr></tfoot>' : '') +
-        '</table></div></div>';
+        (seasons.length > 1 ? '<tfoot><tr><td class="l sticky">Totaal</td><td></td><td></td><td class="num">' + tot.apps + '</td><td class="num">' + U.int(tot.minutes) + '</td><td class="num">' + tot.goals + '</td><td class="num">' + tot.assists + '</td><td class="num">' + tot.yellow + '</td><td class="num">' + tot.red + '</td><td class="num">' + tot.fantasy + '</td><td class="num">' + (tot.fApps ? U.dec(tot.fantasy / tot.fApps) : '') + '</td></tr></tfoot>' : '') +
+        '</table></div>' + (anyBasic ? '<p class="muted" style="margin-top:8px">Assists en fantasypunten werden niet in elk seizoen bijgehouden. Daar tellen alleen de seizoenen mee waarin dat wel gebeurde.</p>' : '') + '</div>';
     }
     return html;
   };
@@ -357,7 +366,7 @@
 
     if (pl.length) {
       var scorers = pl.filter(function (x) { return E.lineGoals(x.l) > 0; });
-      var assists = pl.filter(function (x) { return E.num(x.l.assists) > 0; });
+      var assists = pl.filter(function (x) { return E.num(x.l.assists) > 0; }), B = isBasic(c);
       var yel = lines.filter(function (x) { return x.l.yellow || x.l.red; });
       var motm = pl.filter(function (x) { return x.l.motm; }).sort(function (a, b) { return a.l.motm - b.l.motm; });
       var gt = function (l) { var t = []; if (l.g_corner) t.push(l.g_corner > 1 ? l.g_corner + ' na corner' : 'na corner'); if (l.g_free) t.push(l.g_free > 1 ? l.g_free + ' vrije trap' : 'vrije trap'); if (l.g_pen) t.push(l.g_pen > 1 ? l.g_pen + ' strafschop' : 'strafschop'); return t.length ? ' <span class="muted">(' + t.join(', ') + ')</span>' : ''; };
@@ -368,7 +377,8 @@
         (motm.length ? '<li><span class="k">Man van de match</span><span class="podium">' + motm.map(function (x) { return '<span><b>' + x.l.motm + '</b>' + esc(x.row.name) + '</span>'; }).join('') + '</span></li>' : '') +
         (!scorers.length && !assists.length && !yel.length && !motm.length ? '<li class="muted">Geen bijzonderheden.</li>' : '') + '</ul></div>';
       var own = pl.filter(function (x) { return x.l.own_goals || x.l.pen_missed || x.l.pen_saved; });
-      html += '<div><h2>Teamcijfers</h2>' + teamPairs(m) + '</div></div></div>';
+      var tpm = teamPairs(m);
+      html += (tpm ? '<div><h2>Teamcijfers</h2>' + tpm + '</div>' : '') + '</div></div>';
 
       var ms = ui.matchSort, mp = {};
       pl.forEach(function (x) { mp[x.row.roster.id] = E.linePoints(x.l, m, x.row.roster.position, S.rules).total; });
@@ -382,17 +392,17 @@
         points: function (x) { return mp[x.row.roster.id]; }
       };
       var mg = mget[ms.key] || mget.minutes;
-      html += '<div class="sec"><h2>Opstelling en punten</h2><p class="muted" style="margin-top:4px">Klik op een kolomtitel om te sorteren.</p><div class="table-wrap" style="margin-top:12px"><table class="t"><thead><tr>' +
+      html += '<div class="sec"><h2>' + (B ? 'Opstelling' : 'Opstelling en punten') + '</h2><p class="muted" style="margin-top:4px">Klik op een kolomtitel om te sorteren.</p><div class="table-wrap" style="margin-top:12px"><table class="t"><thead><tr>' +
         th('Speler', 'name', ms, 'match', { cls: 'l sticky' }) + th('Pos.', 'pos', ms, 'match') + th('Min.', 'minutes', ms, 'match') + th('Goals', 'goals', ms, 'match') +
-        th('Assists', 'assists', ms, 'match') + th('Geel', 'yellow', ms, 'match') + th('Rood', 'red', ms, 'match') + th('MvdM', 'motm', ms, 'match', { title: 'Man van de match (1e, 2e of 3e plaats)' }) +
-        th('Punten', 'points', ms, 'match') + '</tr></thead><tbody>';
+        (B ? '' : th('Assists', 'assists', ms, 'match')) + th('Geel', 'yellow', ms, 'match') + th('Rood', 'red', ms, 'match') + (B ? '' : th('MvdM', 'motm', ms, 'match', { title: 'Man van de match (1e, 2e of 3e plaats)' }) +
+        th('Punten', 'points', ms, 'match')) + '</tr></thead><tbody>';
       pl.sort(function (a, b) {
         var d = (mg(a) - mg(b)) * ms.dir; if (typeof mg(a) === 'string') d = String(mg(a)).localeCompare(String(mg(b)), 'nl') * ms.dir;
         return d || (E.num(b.l.minutes) - E.num(a.l.minutes)) || a.row.name.localeCompare(b.row.name, 'nl');
       }).forEach(function (x) {
         var p = { total: mp[x.row.roster.id] };
         html += '<tr><td class="l sticky"><a href="' + personHref(x.row) + '">' + esc(x.row.name) + '</a></td><td>' + U.posBadge(x.row.roster.position) + '</td><td class="num">' + (x.l.minutes === 0 ? 'bank' : x.l.minutes == null ? '<span class="zero">-</span>' : x.l.minutes) + '</td>' +
-          '<td class="num">' + U.dash(E.lineGoals(x.l)) + '</td><td class="num">' + U.dash(E.num(x.l.assists)) + '</td><td class="num">' + U.dash(E.num(x.l.yellow)) + '</td><td class="num">' + U.dash(E.num(x.l.red)) + '</td><td class="num">' + (x.l.motm || '<span class="zero">-</span>') + '</td><td class="num total">' + p.total + '</td></tr>';
+          '<td class="num">' + U.dash(E.lineGoals(x.l)) + '</td>' + (B ? '' : '<td class="num">' + U.dash(E.num(x.l.assists)) + '</td>') + '<td class="num">' + U.dash(E.num(x.l.yellow)) + '</td><td class="num">' + U.dash(E.num(x.l.red)) + '</td>' + (B ? '' : '<td class="num">' + (x.l.motm || '<span class="zero">-</span>') + '</td><td class="num total">' + p.total + '</td>') + '</tr>';
       });
       html += '</tbody></table></div>' + (own.length ? '<p class="muted" style="margin-top:8px">' + own.map(function (x) {
         var t = []; if (x.l.own_goals) t.push('eigen doelpunt'); if (x.l.pen_missed) t.push('gemiste strafschop'); if (x.l.pen_saved) t.push('gestopte strafschop');
@@ -489,6 +499,7 @@
     html += '<div class="sec"><h2>Doelpunten per wedstrijd</h2><div class="legend" style="margin:8px 0"><span style="--c:#1fb457">Gescoord</span><span style="--c:#ff7f5c">Tegen</span></div><div class="chart">' + svg + '</div></div>';
 
     var gt = T.goalTypes, tot = gt.g_play + gt.g_corner + gt.g_free + gt.g_pen;
+    if (isBasic(c)) return html + '<p class="muted" style="margin-top:18px">Voor dit seizoen werden geen soorten doelpunten of stilstaande fases bijgehouden.</p>' + seasonCompare(c);
     html += '<div class="sec"><div class="cols c2"><div><h2>Zo scoren we</h2>' + (tot ? hbars([['Uit het spel', gt.g_play], ['Na een corner', gt.g_corner], ['Vrije trap', gt.g_free], ['Strafschop', gt.g_pen]]) : '<p class="muted">Nog niet ingevuld.</p>') + '</div>' +
       '<div><h2>Zo krijgen we ze tegen</h2>' + (T.ga ? hbars([['Na een corner', T.gaTypes.corner], ['Vrije trap', T.gaTypes.free], ['Strafschop', T.gaTypes.pen], ['Eigen fout', T.gaTypes.error], ['Kwaliteit tegenstander', T.gaTypes.quality]], 'bad') : '<p class="muted">Geen tegendoelpunten.</p>') + '</div></div></div>';
 

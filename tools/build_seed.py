@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Bouwt js/seed.js: seizoen 2025-2026 (uit de oude Google Sheet) en de opzet van 2026-2027.
+"""Bouwt js/seed.js: seizoen 2024-2025 en 2025-2026 (uit de oude Google Sheets) en de opzet van 2026-2027.
 
+Bron 2024-2025: Google Sheet 'KFC MARKE 2024-2025', tabbladen 'Data ...' (enkel minuten, doelpunten en kaarten).
 Bron 2025-2026: Google Sheet 'KFC MARKE 2025-2026', tabbladen 'Data ...'.
 Bron 2026-2027: wedstrijdkalender 1e Provinciale (foot24.be, RBFA-gegevens) en de spelerslijst die de gebruiker aanleverde.
 Opnieuw uitvoeren:  python3 -I tools/build_seed.py
@@ -160,6 +161,119 @@ ADJUST25 = {
 
 RULES25 = {'red': -2, 'twoYellowsIsRed': False, 'motmOnlyOnWin': False}
 
+# ---------------------------------------------------------------- 2024-2025
+# Bron: Google Sheet 'KFC MARKE 2024-2025' (tabbladen 'Data ...'). Uitslagen: RBFA-kalender via voetbalexpress.be.
+# Toen werden geen assists, doelpuntsoorten, man van de match of fantasypunten bijgehouden.
+P24 = [
+    (0, '1', 'Robbe', 'Pattijne'),
+    (1, '2', 'Aaron', 'De Veirman'),
+    (2, '3', 'Noé', 'Rogard'),
+    (3, '4', 'Henri', 'Deprez'),
+    (4, '5', 'Joran', 'De Rudder'),
+    (5, '6', 'Lander', 'Denduyver'),
+    (6, '7', 'Siegurd', 'Defoirdt'),
+    (7, '8', 'Arne', 'Naessens'),
+    (8, '9', 'Jordy', 'Balcaen'),
+    (9, '10', 'Thomas', 'Menghis'),
+    (10, '11', 'Thijs', 'De Leeuw'),
+    (11, '12', 'Hamza', 'El Arini'),
+    (12, '13', 'Gerben', 'Neirijnck'),
+    (13, '14', 'Hannes', 'Tieberghien'),
+    (14, '15', 'Matthias', 'Cottenier'),
+    (15, '16', 'Lucas', 'Coornaert'),
+    (16, '17', 'Benjamin', 'Bonte'),
+    (17, '18', 'Emile', 'Vanluchene'),
+    (18, '19', 'Damien', 'Kontogom'),
+    (19, '20', 'Enver', 'De Weirdt'),
+    (20, '21', 'Lukas', 'Vantieghem'),
+    (21, '22', 'Bob', 'Hochepied'),
+    (22, '23', 'Gilles', 'Herreman'),
+    (23, '24', 'Jannis', 'Bourgeois'),
+    (24, '25', 'Jonas', 'Beernaert'),
+    (25, '26', 'Anthony', 'Degrendel'),
+]
+STAFF24 = [
+    (26, 'T1', 'Davy', 'Vercruysse', 'trainer'),
+    (27, 'T2', 'Thibeau', 'Herreman', 'trainer'),
+    (28, 'KT', 'Robbe', 'Libbrecht', 'keeperstrainer'),
+    (29, 'D1', 'Jens', 'Cattrel', 'delegee'),
+    (30, 'D2', 'Viktor', 'Forrez', 'delegee'),
+]
+# datum, tegenstander, thuis, score voor, score tegen
+M24 = [
+    ('2024-09-01', 'Waregem', 1, 0, 2),
+    ('2024-09-07', 'Rumbeke', 0, 0, 2),
+    ('2024-09-14', 'Moen', 0, 1, 1),
+    ('2024-09-22', 'Wevelgem', 1, 1, 1),
+    ('2024-09-28', 'Zwevegem', 0, 2, 1),
+    ('2024-10-06', 'Oostnieuwkerke', 1, 2, 2),
+    ('2024-10-13', 'Jong Male', 0, 2, 2),
+    ('2024-10-20', 'Ardooie', 1, 1, 1),
+    ('2024-10-26', 'Varsenare', 0, 1, 0),
+    ('2024-11-03', 'Boezinge', 1, 1, 1),
+    ('2024-11-10', 'Roeselare', 1, 2, 1),
+    ('2024-11-16', 'Zedelgem', 0, 1, 0),
+    ('2024-11-24', 'Houthulst', 1, 4, 2),
+    ('2024-12-01', 'Bredene', 0, 0, 2),
+    ('2024-12-08', 'Sparta Heestert', 0, 2, 2),
+    ('2024-12-15', 'Zwevegem', 1, 1, 1),
+    ('2025-01-12', 'Ardooie', 0, 0, 1),
+    ('2025-01-19', 'Jong Male', 1, 3, 0),
+    ('2025-01-26', 'Rumbeke', 1, 0, 3),
+    ('2025-02-02', 'Roeselare', 0, 3, 3),
+    ('2025-02-09', 'Varsenare', 1, 0, 0),
+    ('2025-02-16', 'Waregem', 0, 0, 2),
+    ('2025-02-23', 'Zedelgem', 1, 1, 1),
+    ('2025-03-08', 'Boezinge', 0, 0, 0),
+    ('2025-03-16', 'Bredene', 1, 4, 0),
+    ('2025-03-22', 'Oostnieuwkerke', 0, 2, 1),
+    ('2025-03-30', 'Moen', 1, 1, 0),
+    ('2025-04-05', 'Houthulst', 0, 3, 1),
+    ('2025-04-12', 'Wevelgem', 0, 3, 1),
+    ('2025-04-27', 'Sparta Heestert', 1, 0, 3),
+]
+# speelminuten per wedstrijd, kolom = idx (0-25 spelers, 26-30 staf); leeg = niet in selectie
+MIN24 = [
+    '90,90,13,77,45,90,33,,57,69,45,31,,,,36,90,83,,,,,,90',
+    '0,90,,62,,90,90,20,75,90,15,70,28,,62,,90,,,,28,,,90,,90',
+    '0,77,,0,,90,90,71,90,90,,19,46,,13,,44,90,,,90,,,90,,90',
+    '0,68,,0,,90,68,,90,90,12,22,,,90,,90,90,10,,90,,,90,,90',
+    ',90,,0,10,80,85,24,90,90,5,90,,,90,,,66,,,90,,,90,,90',
+    ',20,15,,,8,75,70,46,90,,82,,,90,,90,90,44,,90,,,90,,90',
+    ',65,11,,,90,,25,65,90,,,,25,79,17,90,90,90,,73,,,90,,90',
+    ',90,45,,,90,37,65,13,90,,,,32,45,25,90,58,77,,45,,,90,,90',
+    '0,78,,,,83,,90,7,39,,,,90,12,51,90,90,83,7,90,,,90,,90',
+    '0,,0,,,90,3,90,8,,,,,90,90,82,90,90,87,0,90,,,90,,90',
+    ',44,1,,,77,44,90,13,,,,,46,90,46,90,90,89,,90,,,90,,90',
+    '0,90,0,,0,90,85,90,70,,,,,,90,20,5,90,90,,90,,,90,,90',
+    '0,70,12,,,90,90,78,66,,,,,45,45,24,20,90,90,,90,,,90,,90',
+    ',90,28,,,90,90,90,90,,,,,62,28,28,73,90,,17,62,,,62,,90',
+    '0,90,23,,,86,83,90,7,23,,,,90,4,67,,90,90,,67,,,90,,90',
+    ',81,90,,,73,81,90,17,24,,,9,90,9,66,,90,90,,0,,,90,,90',
+    ',90,55,,,80,70,,20,10,,,80,80,10,,90,90,90,10,35,,,90,,90',
+    ',90,,0,,,15,,0,90,,,90,90,24,,90,90,75,66,90,,,90,,90',
+    ',90,13,13,,90,32,,32,90,,,90,34,56,,77,77,58,58,90,,,,,90',
+    '0,90,10,,,90,90,20,14,90,,,76,,,,80,90,70,10,80,,,90,,90',
+    '0,,0,,,81,,90,77,90,,,86,90,49,,41,90,,4,90,,,90,,90',
+    '0,45,13,,,90,28,90,13,90,,,90,90,45,,,90,77,,77,,,62,,90',
+    '0,88,,90,,,89,90,,90,,,45,90,2,45,,,85,5,90,,,90,1,90',
+    ',,19,90,,90,84,75,15,,,,90,90,6,84,90,6,71,,90,,,,,90',
+    '0,14,26,64,,90,90,,,90,,,,76,90,90,64,26,76,,90,,,14,,90',
+    '0,54,90,,,90,81,36,9,90,,,,90,,58,90,,90,,90,,,32,,90',
+    ',90,90,,,90,15,75,1,89,,,8,90,,45,90,,82,,90,,,45,,90',
+    ',90,90,,9,90,26,90,20,90,,,64,,,70,90,,81,,64,,,26,,90',
+    ',,90,,,68,5,90,12,90,,,90,90,,85,90,,78,,90,,,22,,90',
+    '',
+]
+GOALS24 = {3: {14: 1}, 4: {8: 1}, 5: {6: 1, 9: 1}, 6: {6: 2}, 7: {7: 1, 18: 1}, 8: {5: 1}, 9: {18: 1}, 10: {18: 1}, 11: {8: 1, 16: 1}, 12: {7: 1}, 13: {6: 2, 17: 1, 20: 1}, 15: {6: 1, 18: 1}, 16: {18: 1}, 18: {1: 1, 6: 1, 9: 1}, 20: {6: 1, 9: 2}, 23: {1: 1}, 25: {6: 1, 15: 1, 16: 1, 18: 1}, 26: {2: 1, 18: 1}, 27: {13: 1}, 28: {6: 1, 18: 2}, 29: {2: 1, 6: 1, 20: 1}}
+YELLOW24 = {1: {1: 1, 3: 1}, 2: {2: 1}, 3: {17: 1, 26: 1, 27: 1}, 4: {9: 1}, 6: {16: 1}, 7: {2: 1, 10: 1}, 8: {3: 1}, 9: {17: 1, 18: 1, 23: 1, 24: 1}, 10: {7: 1, 20: 1}, 11: {5: 1}, 12: {6: 1, 7: 1, 11: 1, 12: 1, 18: 1}, 13: {1: 1, 18: 1, 24: 1}, 14: {14: 1, 23: 1}, 15: {5: 1}, 16: {9: 1, 18: 1}, 17: {2: 1, 5: 1, 18: 1}, 18: {23: 1}, 19: {0: 1, 19: 1}, 20: {1: 1, 18: 1, 20: 1}, 21: {3: 1, 12: 1, 14: 1, 23: 1, 24: 1}, 22: {6: 1, 17: 1, 23: 1}, 23: {2: 1, 4: 1, 9: 1, 23: 1}, 24: {7: 1}, 26: {8: 1}, 27: {13: 1}, 28: {9: 1, 15: 1}, 29: {2: 1}}
+RED24 = {1: {15: 1, 17: 1}, 8: {2: 1, 6: 1}, 11: {19: 1}, 21: {5: 1}}
+
+# Dezelfde speler, in de sheet van 2024-2025 anders gespeld
+ALIAS24 = {('Lukas', 'Vantieghem'): ('Lucas', 'Vantieghem')}
+KEEPERS24 = {'Robbe Pattijne', 'Anthony Degrendel'}
+RULES24 = {'basic': True}
+
 # ---------------------------------------------------------------- 2026-2027
 # datum, kickoff, tegenstander, thuis, score voor, score tegen  (alleen 1e Provinciale: 30 wedstrijden)
 M26 = [
@@ -199,6 +313,41 @@ def build():
         pid = 'p-' + slug(first + ' ' + last)
         people[pid] = {'id': pid, 'first_name': first, 'last_name': last}
         return pid
+
+    # ---- seizoen 2024-2025 (enkel minuten, doelpunten, kaarten en uitslagen)
+    s24 = {'id': 's2024', 'name': '2024-2025', 'start_year': 2024, 'rules': RULES24,
+           'note': 'Overgenomen uit de Google Sheet KFC MARKE 2024-2025: enkel minuten, doelpunten en kaarten. Uitslagen uit de RBFA-kalender.'}
+    prev_pos24 = {(f + ' ' + l): pos for _, _, f, l, pos in P25}
+    rid24 = {}
+    for idx, num, first, last in P24:
+        first, last = ALIAS24.get((first, last), (first, last))
+        pid = person(first, last)
+        rid = 'r2024-' + slug(first + ' ' + last)
+        rid24[idx] = rid
+        name = first + ' ' + last
+        pos = 'keeper' if name in KEEPERS24 else prev_pos24.get(name, '')
+        roster.append({'id': rid, 'season_id': 's2024', 'person_id': pid, 'role': 'speler', 'number': num, 'position': pos})
+    for idx, num, first, last, pos in STAFF24:
+        pid = person(first, last)
+        rid = 'r2024-' + slug(first + ' ' + last)
+        rid24[idx] = rid
+        roster.append({'id': rid, 'season_id': 's2024', 'person_id': pid, 'role': 'staf', 'number': num, 'position': pos})
+    for i, (d, opp, home, sf, sa) in enumerate(M24, start=1):
+        mid = 'm2024-%02d' % i
+        matches.append({'id': mid, 'season_id': 's2024', 'date': d, 'opponent': opp, 'home': bool(home), 'competition': 'competitie',
+                        'score_for': sf, 'score_against': sa})
+        per = {}
+        for idx, t in enumerate(MIN24[i - 1].split(',')):
+            if t != '': per.setdefault(idx, {})['minutes'] = int(t)
+        for idx, q in GOALS24.get(i, {}).items():
+            per.setdefault(idx, {})['g_play'] = q
+        for name, src in (('yellow', YELLOW24), ('red', RED24)):
+            for idx, q in src.get(i, {}).items():
+                per.setdefault(idx, {})[name] = q
+        for idx, d_ in sorted(per.items()):
+            row = {'id': mid + ':' + rid24[idx], 'match_id': mid, 'roster_id': rid24[idx]}
+            row.update(d_)
+            lines.append(row)
 
     # ---- seizoen 2025-2026
     s25 = {'id': 's2025', 'name': '2025-2026', 'start_year': 2025, 'rules': RULES25, 'note': 'Overgenomen uit de Google Sheet KFC MARKE 2025-2026'}
@@ -252,7 +401,7 @@ def build():
             row.update(d_)
             lines.append(row)
 
-    seasons = [s25]
+    seasons = [s24, s25]
     # ---- seizoen 2026-2027
     s26 = {'id': 's2026', 'name': '2026-2027', 'start_year': 2026, 'rules': {}, 'note': 'Kalender 1e Provinciale West-Vlaanderen (RBFA / foot24.be)'}
     seasons.append(s26)
