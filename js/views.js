@@ -521,7 +521,7 @@
 
   /* ---------- Meer (mobiel) ---------- */
   V.more = function (c) {
-    var items = [['#/kaarten', 'card', 'Kaarten', 'Gele en rode kaarten, schorsingen'], ['#/analyse', 'chart', 'Analyse', 'Teamcijfers en seizoenen vergelijken']];
+    var items = [['#/fantasy', 'star', 'Fantasy', 'Klassement met fantasypunten'], ['#/analyse', 'chart', 'Analyse', 'Teamcijfers en seizoenen vergelijken']];
     items.push(c.canEdit ? ['#/beheer', 'gear', 'Beheer', 'Gegevens invoeren en aanpassen'] : ['#/login', 'gear', 'Inloggen', 'Enkel voor de beheerder']);
     return '<div class="page-head"><h1>Meer</h1></div><div class="menu-grid">' + items.map(function (i) { return '<a href="' + i[0] + '">' + U.icon(i[1]) + '<div><b>' + i[2] + '</b><span>' + i[3] + '</span></div></a>'; }).join('') + '</div>';
   };

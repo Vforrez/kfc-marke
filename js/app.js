@@ -32,7 +32,7 @@
 
   /* ---------- kader ---------- */
   var NAV = [['#/', 'Overzicht', 'home', 'overzicht'], ['#/fantasy', 'Fantasy', 'star', 'fantasy'], ['#/spelers', 'Selectie', 'users', 'spelers'], ['#/wedstrijden', 'Wedstrijden', 'cal', 'wedstrijden'], ['#/kaarten', 'Kaarten', 'card', 'kaarten'], ['#/analyse', 'Analyse', 'chart', 'analyse']];
-  var TAB = [['#/', 'Overzicht', 'home', 'overzicht'], ['#/fantasy', 'Fantasy', 'star', 'fantasy'], ['#/spelers', 'Selectie', 'users', 'spelers'], ['#/wedstrijden', 'Wedstrijden', 'cal', 'wedstrijden'], ['#/meer', 'Meer', 'more', 'meer']];
+  var TAB = [['#/', 'Overzicht', 'home', 'overzicht'], ['#/spelers', 'Selectie', 'users', 'spelers'], ['#/wedstrijden', 'Wedstrijden', 'cal', 'wedstrijden'], ['#/kaarten', 'Kaarten', 'card', 'kaarten'], ['#/meer', 'Meer', 'more', 'meer']];
   function section(parts) {
     var r = parts[0] || 'overzicht';
     if (r === 'speler') return 'spelers';
@@ -59,7 +59,7 @@
   function routeParts() { return (location.hash || '#/').replace(/^#\/?/, '').split('?')[0].split('/').filter(Boolean); }
 
   function updateChrome(parts, canEdit) {
-    var sec = section(parts), more = ['kaarten', 'analyse', 'beheer', 'login', 'meer'].indexOf(sec) >= 0;
+    var sec = section(parts), more = ['fantasy', 'analyse', 'beheer', 'login', 'meer'].indexOf(sec) >= 0;
     var items = NAV.slice(); if (canEdit) items.push(['#/beheer', 'Beheer', 'gear', 'beheer']);
     document.getElementById('nav').innerHTML = items.map(function (n) { return '<a href="' + n[0] + '"' + (sec === n[3] ? ' aria-current="page"' : '') + '>' + n[1] + '</a>'; }).join('');
     document.getElementById('tabbar').innerHTML = TAB.map(function (n) {
