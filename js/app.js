@@ -124,8 +124,18 @@
     if (after) after(view.querySelector('#page'));
     document.title = title + ' - KFC Marke';
     updateChrome(parts, canEdit);
-    if (navigated) { window.scrollTo(0, 0); }
+    if (navigated) { window.scrollTo(0, 0); if (!canEdit) track(hashNow); }
   }
+  /* bezoekersteller (GoatCounter, zonder cookies); telt geen beheerder en doet niets als de teller niet bereikbaar is */
+  var pendingTrack = null;
+  function track(path) {
+    try {
+      var gc = window.goatcounter;
+      if (gc && typeof gc.count === 'function') gc.count({ path: path || '#/' });
+      else pendingTrack = path || '#/';
+    } catch (e) { /* de teller mag nooit de app storen */ }
+  }
+  window.kfcTrackFlush = function () { if (pendingTrack != null) { var p = pendingTrack; pendingTrack = null; track(p); } };
   app.render = render;
 
   function bindLogin(view) {
